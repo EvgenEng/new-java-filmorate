@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.model.Film;
 import ru.yandex.practicum.exception.ValidationException;
+import ru.yandex.practicum.exception.NotFoundException;
 import jakarta.validation.Valid;
 import java.util.*;
 import java.time.LocalDate;
@@ -12,13 +13,12 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/films")
 @Slf4j
-
 public class FilmController {
     private final Map<Long, Film> films = new HashMap<>();
     private long idCounter = 1;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) // Добавлено для правильного статуса
+    @ResponseStatus(HttpStatus.CREATED)
     public Film create(@Valid @RequestBody Film film) {
         validateFilm(film);
         film.setId(idCounter++);
@@ -32,7 +32,7 @@ public class FilmController {
         if (!films.containsKey(film.getId())) {
             String errorMessage = "Фильм с id=" + film.getId() + " не найден";
             log.error(errorMessage);
-            throw new ValidationException(errorMessage);
+            throw new NotFoundException(errorMessage);
         }
         validateFilm(film);
         films.put(film.getId(), film);
@@ -50,7 +50,6 @@ public class FilmController {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
 
-        // Дополнительные проверки (по желанию)
         if (film.getName() == null || film.getName().isBlank()) {
             throw new ValidationException("Название фильма не может быть пустым");
         }
@@ -58,6 +57,9 @@ public class FilmController {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
+
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
+            throw new ValidationException("Описание фильма не может быть длиннее 200 символов");
+        }
     }
 }
-

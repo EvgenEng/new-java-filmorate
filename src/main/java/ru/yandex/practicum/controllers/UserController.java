@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.model.User;
 import ru.yandex.practicum.exception.ValidationException;
+import ru.yandex.practicum.exception.NotFoundException;
 import jakarta.validation.Valid;
 import java.util.*;
 
@@ -16,6 +17,9 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         user.setId(idCounter++);
         users.put(user.getId(), user);
         log.info("Добавлен новый пользователь: {}", user);
@@ -25,7 +29,7 @@ public class UserController {
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         if (!users.containsKey(user.getId())) {
-            throw new ValidationException("Пользователь с id=" + user.getId() + " не найден");
+            throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
         }
         users.put(user.getId(), user);
         log.info("Обновлен пользователь: {}", user);
