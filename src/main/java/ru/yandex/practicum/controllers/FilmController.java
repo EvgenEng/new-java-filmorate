@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/films")
 @Slf4j
+
 public class FilmController {
     private final Map<Long, Film> films = new HashMap<>();
     private long idCounter = 1;
@@ -59,3 +60,4 @@ public class FilmController {
         }
     }
 }
+
