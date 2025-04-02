@@ -23,42 +23,56 @@ public class FilmController {
         validateFilm(film);
         film.setId(idCounter++);
         films.put(film.getId(), film);
-        log.info("Добавлен новый фильм: {}", film);
+        log.info("Добавлен новый фильм с ID: {}", film.getId());
         return film;
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            String errorMessage = "Фильм с id=" + film.getId() + " не найден";
-            log.error(errorMessage);
-            throw new NotFoundException(errorMessage);
+        if (film.getId() == null) {
+            log.error("Попытка обновления фильма без ID");
+            throw new ValidationException("ID фильма не может быть null");
         }
+
+        if (!films.containsKey(film.getId())) {
+            log.warn("Фильм с ID {} не найден", film.getId());
+            throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
+        }
+
         validateFilm(film);
         films.put(film.getId(), film);
-        log.info("Обновлен фильм: {}", film);
+        log.info("Обновлен фильм с ID: {}", film.getId());
         return film;
     }
 
     @GetMapping
-    public Collection<Film> findAll() {
-        return films.values();
+    public List<Film> findAll() {
+        log.debug("Запрошен список всех фильмов, количество: {}", films.size());
+        return new ArrayList<>(films.values());
     }
 
     private void validateFilm(Film film) {
+        // Валидация даты релиза
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            log.warn("Некорректная дата релиза: {}", film.getReleaseDate());
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
 
+        // Валидация названия
         if (film.getName() == null || film.getName().isBlank()) {
+            log.warn("Пустое название фильма");
             throw new ValidationException("Название фильма не может быть пустым");
         }
 
+        // Валидация продолжительности
         if (film.getDuration() <= 0) {
+            log.warn("Некорректная продолжительность фильма: {}", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительной");
         }
 
+        // Валидация описания
         if (film.getDescription() != null && film.getDescription().length() > 200) {
+            log.warn("Слишком длинное описание фильма: {} символов", film.getDescription().length());
             throw new ValidationException("Описание фильма не может быть длиннее 200 символов");
         }
     }

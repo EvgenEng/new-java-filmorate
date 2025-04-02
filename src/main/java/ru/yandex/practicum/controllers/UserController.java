@@ -17,27 +17,44 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
+        // Автозаполнение имени, если оно пустое
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
+            log.debug("Имя пользователя установлено равным логину: {}", user.getLogin());
         }
+
+        // Валидация email
+        if (user.getEmail() == null || !user.getEmail().contains("@")) {
+            log.warn("Неверный формат email: {}", user.getEmail());
+            throw new ValidationException("Email должен содержать @");
+        }
+
         user.setId(idCounter++);
         users.put(user.getId(), user);
-        log.info("Добавлен новый пользователь: {}", user);
+        log.info("Добавлен новый пользователь с ID: {}", user.getId());
         return user;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
+        if (user.getId() == null) {
+            log.error("Попытка обновления пользователя без ID");
+            throw new ValidationException("ID пользователя не может быть null");
+        }
+
         if (!users.containsKey(user.getId())) {
+            log.warn("Пользователь с ID {} не найден", user.getId());
             throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
         }
+
         users.put(user.getId(), user);
-        log.info("Обновлен пользователь: {}", user);
+        log.info("Обновлен пользователь с ID: {}", user.getId());
         return user;
     }
 
     @GetMapping
-    public Collection<User> findAll() {
-        return users.values();
+    public List<User> findAll() {
+        log.debug("Запрошен список всех пользователей, количество: {}", users.size());
+        return new ArrayList<>(users.values());
     }
 }

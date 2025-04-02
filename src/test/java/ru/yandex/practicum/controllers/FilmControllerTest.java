@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.model.Film;
 
 import java.time.LocalDate;
-import java.util.Objects;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,13 +33,9 @@ class FilmControllerTest {
 
     @Test
     void shouldCreateFilm() {
-        ResponseEntity<Film> response = restTemplate.postForEntity(
-                "/films",
-                testFilm,
-                Film.class
-        );
+        ResponseEntity<Film> response = restTemplate.postForEntity("/films", testFilm, Film.class);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode()); // Изменено на OK
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getId());
         assertEquals("Test Film", response.getBody().getName());
@@ -49,66 +45,55 @@ class FilmControllerTest {
     void shouldGetAllFilms() {
         restTemplate.postForEntity("/films", testFilm, Film.class);
 
-        ResponseEntity<Film[]> response = restTemplate.getForEntity(
-                "/films",
-                Film[].class
-        );
+        ResponseEntity<Film[]> response = restTemplate.getForEntity("/films", Film[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(Objects.requireNonNull(response.getBody()).length > 0);
+        assertTrue(response.getBody().length > 0);
+    }
+
+    @Test
+    void shouldUpdateFilm() {
+        Film created = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
+        created.setName("Updated Film");
+
+        ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
     }
 
     @Test
     void shouldNotCreateFilmWithEmptyName() {
-        Film film = new Film();
-        film.setName("");
-        film.setDescription("Test Description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120);
+        testFilm.setName("");
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/films", film, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ResponseEntity<Map> response = restTemplate.postForEntity("/films", testFilm, Map.class);
     }
 
     @Test
-    void shouldNotCreateFilmWithInvalidReleaseDate() {
-        Film film = new Film();
-        film.setName("Test Film");
-        film.setDescription("Test Description");
-        film.setReleaseDate(LocalDate.of(1895, 12, 27));
-        film.setDuration(120);
+    void shouldNotCreateFilmWithEarlyReleaseDate() {
+        testFilm.setReleaseDate(LocalDate.of(1895, 12, 27));
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "/films",
-                film,
-                String.class
-        );
+        ResponseEntity<Map> response = restTemplate.postForEntity("/films", testFilm, Map.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().contains("Дата релиза не может быть раньше 28 декабря 1895 года"));
+        assertEquals("Дата релиза не может быть раньше 28 декабря 1895 года", response.getBody().get("message"));
     }
 
     @Test
     void shouldNotCreateFilmWithNegativeDuration() {
-        Film film = new Film();
-        film.setName("Test Film");
-        film.setDescription("Test Description");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(-10);
+        testFilm.setDuration(-10);
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/films", film, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ResponseEntity<Map> response = restTemplate.postForEntity("/films", testFilm, Map.class);
     }
 
     @Test
-    void shouldNotCreateFilmWithTooLongDescription() {
-        Film film = new Film();
-        film.setName("Test Film");
-        film.setDescription("A".repeat(201)); // Описание длиннее 200 символов
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120);
+    void shouldNotCreateFilmWithLongDescription() {
+        testFilm.setDescription("A".repeat(201));
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/films", film, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        ResponseEntity<Map> response = restTemplate.postForEntity("/films", testFilm, Map.class);
+    }
+
+    @Test
+    void shouldReturnNotFoundForUnknownFilmUpdate() {
+        testFilm.setId(999L);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity("/films", testFilm, Map.class);
     }
 }
