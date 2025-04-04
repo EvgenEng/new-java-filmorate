@@ -3,6 +3,7 @@ package ru.yandex.practicum.model;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import ru.yandex.practicum.validators.ValidReleaseDate;
 
 @Data
 public class Film {
@@ -14,7 +15,7 @@ public class Film {
     @Size(max = 200, message = "Максимальная длина описания — 200 символов")
     private String description;
 
-    @NotNull(message = "Дата релиза обязательна")
+    @ValidReleaseDate
     private LocalDate releaseDate;
 
     @Positive(message = "Продолжительность должна быть положительной")

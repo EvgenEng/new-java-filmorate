@@ -2,59 +2,52 @@ package ru.yandex.practicum.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.exception.ValidationException;
+import ru.yandex.practicum.exception.ErrorResponse;
+
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(ValidationException e) {
-        log.error("Ошибка валидации: {}", e.getMessage());
-        Map<String, Object> response = createErrorResponse(
-                e.getMessage(),
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidationException(ValidationException exception) {
+        log.error("Ошибка валидации: {}", exception.getMessage());
+        return new ErrorResponse(
+                exception.getMessage(),
                 "Bad Request",
-                HttpStatus.BAD_REQUEST
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now()
         );
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFoundException(NotFoundException e) {
-        log.error("Объект не найден: {}", e.getMessage());
-        Map<String, Object> response = createErrorResponse(
-                e.getMessage(),
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFoundException(NotFoundException exception) {
+        log.error("Объект не найден: {}", exception.getMessage());
+        return new ErrorResponse(
+                exception.getMessage(),
                 "Not Found",
-                HttpStatus.NOT_FOUND
+                HttpStatus.NOT_FOUND,
+                LocalDateTime.now()
         );
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception e) {
-        log.error("Внутренняя ошибка сервера: {}", e.getMessage(), e);
-        Map<String, Object> response = createErrorResponse(
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleAllExceptions(Exception exception) {
+        log.error("Внутренняя ошибка сервера: {}", exception.getMessage(), exception);
+        return new ErrorResponse(
                 "Internal Server Error",
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                exception.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                LocalDateTime.now()
         );
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    private Map<String, Object> createErrorResponse(String message, String error, HttpStatus status) {
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", status.value());
-        response.put("error", error);
-        response.put("message", message);
-        response.put("path", ""); // Можно добавить реальный path из запроса
-        return response;
     }
 }

@@ -17,18 +17,6 @@ public class UserController {
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        // Автозаполнение имени, если оно пустое
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.debug("Имя пользователя установлено равным логину: {}", user.getLogin());
-        }
-
-        // Валидация email
-        if (user.getEmail() == null || !user.getEmail().contains("@")) {
-            log.warn("Неверный формат email: {}", user.getEmail());
-            throw new ValidationException("Email должен содержать @");
-        }
-
         user.setId(idCounter++);
         users.put(user.getId(), user);
         log.info("Добавлен новый пользователь с ID: {}", user.getId());

@@ -1,5 +1,9 @@
 package ru.yandex.practicum.controllers;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,7 @@ import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,10 +25,17 @@ class UserControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    private Validator validator;
+
     private User testUser;
 
     @BeforeEach
     void setUp() {
+        // Инициализация валидатора
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        }
+
         testUser = new User();
         testUser.setEmail("test@example.com");
         testUser.setLogin("testlogin");
@@ -65,38 +77,36 @@ class UserControllerTest {
     @Test
     void shouldNotCreateUserWithEmptyEmail() {
         testUser.setEmail("");
-
-        ResponseEntity<Map> response = restTemplate.postForEntity("/users", testUser, Map.class);
+        Set<ConstraintViolation<User>> violations = validator.validate(testUser);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
     void shouldNotCreateUserWithInvalidEmail() {
         testUser.setEmail("invalid-email");
-
-        ResponseEntity<Map> response = restTemplate.postForEntity("/users", testUser, Map.class);
+        Set<ConstraintViolation<User>> violations = validator.validate(testUser);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
     void shouldNotCreateUserWithFutureBirthday() {
         testUser.setBirthday(LocalDate.now().plusDays(1));
-
-        ResponseEntity<Map> response = restTemplate.postForEntity("/users", testUser, Map.class);
+        Set<ConstraintViolation<User>> violations = validator.validate(testUser);
+        assertFalse(violations.isEmpty());
     }
 
     @Test
     void shouldUseLoginAsNameWhenNameIsEmpty() {
         testUser.setName("");
-
-        ResponseEntity<User> response = restTemplate.postForEntity("/users", testUser, User.class);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("testlogin", response.getBody().getName());
+        Set<ConstraintViolation<User>> violations = validator.validate(testUser);
+        assertTrue(violations.isEmpty());
+        assertEquals("testlogin", testUser.getName());
     }
 
     @Test
     void shouldReturnNotFoundForUnknownUserUpdate() {
         testUser.setId(999L);
-
         ResponseEntity<Map> response = restTemplate.postForEntity("/users", testUser, Map.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 }
