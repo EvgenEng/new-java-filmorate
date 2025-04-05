@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.model.User;
@@ -105,8 +107,11 @@ class UserControllerTest {
 
     @Test
     void shouldReturnNotFoundForUnknownUserUpdate() {
-        testUser.setId(999L);
-        ResponseEntity<Map> response = restTemplate.postForEntity("/users", testUser, Map.class);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        testUser.setId(999L); // Устанавливаем ID несуществующего пользователя
+
+        ResponseEntity<Map> response = restTemplate.exchange("/users", HttpMethod.PUT,
+                new HttpEntity<>(testUser), Map.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 }
