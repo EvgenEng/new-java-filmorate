@@ -5,13 +5,13 @@ import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.model.Film;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
     private final Map<Long, Set<Long>> likes = new HashMap<>();
     private long idCounter = 1;
-    private HashMap<Object, Object> users;
 
     @Override
     public Film create(Film film) {
@@ -48,9 +48,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(filmId)) {
             throw new NotFoundException("Film with ID " + filmId + " not found");
         }
-        if (!users.containsKey(userId)) {
-            throw new NotFoundException("User with ID " + userId + " not found");
-        }
+        // Проверка пользователя должна быть в сервисном слое или через UserStorage
         likes.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
     }
 
@@ -59,9 +57,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(filmId)) {
             throw new NotFoundException("Film with ID " + filmId + " not found");
         }
-        if (!users.containsKey(userId)) {
-            throw new NotFoundException("User with ID " + userId + " not found");
-        }
+        // Проверка пользователя должна быть в сервисном слое или через UserStorage
         Set<Long> filmLikes = likes.get(filmId);
         if (filmLikes != null) {
             filmLikes.remove(userId);
@@ -71,9 +67,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public List<Film> getPopularFilms(int count) {
         return films.values().stream()
-                .sorted(Comparator.comparingInt(film -> likes.getOrDefault(((Film) film).getId(),
-                        Collections.emptySet()).size()).reversed())
+                .sorted((f1, f2) -> {
+                    int likes1 = likes.getOrDefault(f1.getId(), Collections.emptySet()).size();
+                    int likes2 = likes.getOrDefault(f2.getId(), Collections.emptySet()).size();
+                    return Integer.compare(likes2, likes1); // Сортировка по убыванию
+                })
                 .limit(count)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

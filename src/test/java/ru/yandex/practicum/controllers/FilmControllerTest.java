@@ -135,4 +135,34 @@ class FilmControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertTrue(response.getBody().getMessage().contains("Film with ID " + unknownFilmId + " not found"));
     }
+
+    @Test
+    void shouldGetPopularFilms() {
+        // Создаем 3 фильма
+        Film film1 = createTestFilm("Film 1");
+        Film film2 = createTestFilm("Film 2");
+        Film film3 = createTestFilm("Film 3");
+
+        // Добавляем лайки
+        restTemplate.put("/films/1/like/1", null);
+        restTemplate.put("/films/1/like/2", null);
+        restTemplate.put("/films/2/like/1", null);
+
+        // Получаем популярные фильмы
+        ResponseEntity<Film[]> response = restTemplate.getForEntity("/films/popular?count=2", Film[].class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().length);
+        assertEquals("Film 1", response.getBody()[0].getName()); // Должен быть первым, т.к. у него 2 лайка
+        assertEquals("Film 2", response.getBody()[1].getName()); // Второй с 1 лайком
+    }
+
+    private Film createTestFilm(String name) {
+        Film film = new Film();
+        film.setName(name);
+        film.setDescription("Description");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(120);
+        return restTemplate.postForEntity("/films", film, Film.class).getBody();
+    }
 }
