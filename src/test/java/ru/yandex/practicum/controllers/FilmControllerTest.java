@@ -73,7 +73,7 @@ class FilmControllerTest {
         created.setName(""); // Устанавливаем пустое имя
 
         ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -83,7 +83,7 @@ class FilmControllerTest {
         created.setReleaseDate(LocalDate.of(1895, 12, 27)); // Устанавливаем раннюю дату релиза
 
         ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -93,7 +93,7 @@ class FilmControllerTest {
         created.setDuration(-10); // Устанавливаем отрицательную продолжительность
 
         ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -101,7 +101,7 @@ class FilmControllerTest {
         testFilm.setDescription("A".repeat(201));
 
         ResponseEntity<Film> response = restTemplate.postForEntity("/films", testFilm, Film.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test

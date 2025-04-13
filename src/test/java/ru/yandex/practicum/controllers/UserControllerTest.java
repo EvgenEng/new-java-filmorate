@@ -49,7 +49,7 @@ class UserControllerTest {
     void shouldCreateUser() {
         ResponseEntity<User> response = restTemplate.postForEntity("/users", testUser, User.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getId());
         assertEquals("testlogin", response.getBody().getLogin());
@@ -72,7 +72,7 @@ class UserControllerTest {
 
         ResponseEntity<User> response = restTemplate.postForEntity("/users", created, User.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals("Updated Name", response.getBody().getName());
     }
 
