@@ -144,9 +144,9 @@ class FilmControllerTest {
         Film film3 = createTestFilm("Film 3");
 
         // Добавляем лайки
-        restTemplate.put("/films/1/like/1", null);
-        restTemplate.put("/films/1/like/2", null);
-        restTemplate.put("/films/2/like/1", null);
+        restTemplate.put("/films/" + film1.getId() + "/like/1", null); // Используем ID film1
+        restTemplate.put("/films/" + film1.getId() + "/like/2", null); // Используем ID film1
+        restTemplate.put("/films/" + film2.getId() + "/like/1", null); // Используем ID film2
 
         // Получаем популярные фильмы
         ResponseEntity<Film[]> response = restTemplate.getForEntity("/films/popular?count=2", Film[].class);
