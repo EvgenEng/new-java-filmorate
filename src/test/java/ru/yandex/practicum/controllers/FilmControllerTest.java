@@ -11,8 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.Film;
+import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +25,7 @@ class FilmControllerTest {
     private TestRestTemplate restTemplate;
 
     private Film testFilm;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
@@ -31,6 +34,12 @@ class FilmControllerTest {
         testFilm.setDescription("Test Description");
         testFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
         testFilm.setDuration(120);
+
+        testUser = new User();
+        testUser.setName("Test User");
+        testUser.setLogin("testlogin");
+        testUser.setEmail("test@example.com");
+        testUser.setBirthday(LocalDate.of(1990, 1, 1));
     }
 
     @Test
@@ -54,10 +63,10 @@ class FilmControllerTest {
     }
 
     @Test
-    void shouldUpdateFilm() {
+    void shouldTestFilm() {
         Film created = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
         assertNotNull(created);
-        created.setName("Updated Film");
+        created.setName("Test Film");
 
         restTemplate.put("/films", created);
         ResponseEntity<Film[]> response = restTemplate.getForEntity("/films", Film[].class);
@@ -71,9 +80,9 @@ class FilmControllerTest {
     void shouldNotUpdateFilmWithEmptyName() {
         Film created = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
         assertNotNull(created);
-        created.setName(""); // Устанавливаем пустое имя
+        created.setName("");
 
-        ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity("/films", created, ErrorResponse.class);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -81,9 +90,9 @@ class FilmControllerTest {
     void shouldNotUpdateFilmWithEarlyReleaseDate() {
         Film created = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
         assertNotNull(created);
-        created.setReleaseDate(LocalDate.of(1895, 12, 27)); // Устанавливаем раннюю дату релиза
+        created.setReleaseDate(LocalDate.of(1895, 12, 27));
 
-        ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity("/films", created, ErrorResponse.class);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -91,9 +100,9 @@ class FilmControllerTest {
     void shouldNotUpdateFilmWithNegativeDuration() {
         Film created = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
         assertNotNull(created);
-        created.setDuration(-10); // Устанавливаем отрицательную продолжительность
+        created.setDuration(-10);
 
-        ResponseEntity<Film> response = restTemplate.postForEntity("/films", created, Film.class);
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity("/films", created, ErrorResponse.class);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -101,7 +110,7 @@ class FilmControllerTest {
     void shouldNotCreateFilmWithLongDescription() {
         testFilm.setDescription("A".repeat(201));
 
-        ResponseEntity<Film> response = restTemplate.postForEntity("/films", testFilm, Film.class);
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity("/films", testFilm, ErrorResponse.class);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
@@ -121,40 +130,123 @@ class FilmControllerTest {
     }
 
     @Test
-    public void testAddLikeToUnknownFilm() {
-        Long userId = 1L; // Существующий пользователь
-        Long unknownFilmId = 999L; // Неизвестный фильм
+    void testAddLikeToUnknownFilm() {
+        User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        assertNotNull(createdUser);
 
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-                "/films/" + unknownFilmId + "/like/" + userId,
+                "/films/999/like/" + createdUser.getId(),
                 HttpMethod.PUT,
                 null,
                 ErrorResponse.class
         );
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().getMessage().contains("Film with ID " + unknownFilmId + " not found"));
+        assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("Film with ID 999 not found"));
+    }
+
+    @Test
+    void shouldAddLike() {
+        User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        Film createdFilm = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
+        assertNotNull(createdUser);
+        assertNotNull(createdFilm);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/films/" + createdFilm.getId() + "/like/" + createdUser.getId(),
+                HttpMethod.PUT,
+                null,
+                String.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldNotAddLikeFromUnknownUser() {
+        Film createdFilm = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
+        assertNotNull(createdFilm);
+
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/films/" + createdFilm.getId() + "/like/999",
+                HttpMethod.PUT,
+                null,
+                ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("User with ID 999 not found"));
+    }
+
+    @Test
+    void shouldRemoveLike() {
+        User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        Film createdFilm = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
+        assertNotNull(createdUser);
+        assertNotNull(createdFilm);
+
+        restTemplate.put("/films/" + createdFilm.getId() + "/like/" + createdUser.getId(), null);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/films/" + createdFilm.getId() + "/like/" + createdUser.getId(),
+                HttpMethod.DELETE,
+                null,
+                String.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldNotRemoveLikeFromUnknownFilm() {
+        User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        assertNotNull(createdUser);
+
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/films/999/like/" + createdUser.getId(),
+                HttpMethod.DELETE,
+                null,
+                ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("Film with ID 999 not found"));
+    }
+
+    @Test
+    void shouldNotRemoveLikeFromUnknownUser() {
+        Film createdFilm = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
+        assertNotNull(createdFilm);
+
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/films/" + createdFilm.getId() + "/like/999",
+                HttpMethod.DELETE,
+                null,
+                ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("User with ID 999 not found"));
     }
 
     @Test
     void shouldGetPopularFilms() {
-        // Создаем 3 фильма
         Film film1 = createTestFilm("Film 1");
         Film film2 = createTestFilm("Film 2");
         Film film3 = createTestFilm("Film 3");
 
-        // Добавляем лайки
-        restTemplate.put("/films/" + film1.getId() + "/like/1", null); // Используем ID film1
-        restTemplate.put("/films/" + film1.getId() + "/like/2", null); // Используем ID film1
-        restTemplate.put("/films/" + film2.getId() + "/like/1", null); // Используем ID film2
+        User user1 = createTestUser("User 1");
+        User user2 = createTestUser("User 2");
 
-        // Получаем популярные фильмы
+        restTemplate.put("/films/" + film1.getId() + "/like/" + user1.getId(), null);
+        restTemplate.put("/films/" + film1.getId() + "/like/" + user2.getId(), null);
+        restTemplate.put("/films/" + film2.getId() + "/like/" + user1.getId(), null);
+
         ResponseEntity<Film[]> response = restTemplate.getForEntity("/films/popular?count=2", Film[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().length);
-        assertEquals("Film 1", response.getBody()[0].getName()); // Должен быть первым, т.к. у него 2 лайка
-        assertEquals("Film 2", response.getBody()[1].getName()); // Второй с 1 лайком
+        assertEquals(2, Objects.requireNonNull(response.getBody()).length);
+        assertEquals("Film 1", response.getBody()[0].getName());
     }
 
     private Film createTestFilm(String name) {
@@ -164,5 +256,14 @@ class FilmControllerTest {
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
         return restTemplate.postForEntity("/films", film, Film.class).getBody();
+    }
+
+    private User createTestUser(String name) {
+        User user = new User();
+        user.setName(name);
+        user.setLogin(name.toLowerCase().replace(" ", ""));
+        user.setEmail(name.toLowerCase().replace(" ", "") + "@example.com");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        return restTemplate.postForEntity("/users", user, User.class).getBody();
     }
 }

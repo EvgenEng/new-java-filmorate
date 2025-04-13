@@ -12,6 +12,7 @@ public interface UserStorage {
     List<User> findAll();
 
     User findById(Long id);
+    boolean existsById(Long id);
 
     void addFriend(Long userId, Long friendId);
 

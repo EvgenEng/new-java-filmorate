@@ -43,6 +43,11 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
+    }
+
+    @Override
     public void addFriend(Long userId, Long friendId) {
         if (!users.containsKey(userId)) {
             throw new NotFoundException("User with ID " + userId + " not found");

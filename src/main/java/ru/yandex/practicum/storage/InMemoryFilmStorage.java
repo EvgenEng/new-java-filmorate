@@ -11,7 +11,12 @@ import java.util.stream.Collectors;
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
     private final Map<Long, Set<Long>> likes = new HashMap<>();
+    private final UserStorage userStorage;
     private long idCounter = 1;
+
+    public InMemoryFilmStorage(UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     @Override
     public Film create(Film film) {
@@ -48,7 +53,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(filmId)) {
             throw new NotFoundException("Film with ID " + filmId + " not found");
         }
-        // Проверка пользователя должна быть в сервисном слое или через UserStorage
+        if (!userStorage.existsById(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
         likes.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
     }
 
@@ -57,7 +64,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(filmId)) {
             throw new NotFoundException("Film with ID " + filmId + " not found");
         }
-        // Проверка пользователя должна быть в сервисном слое или через UserStorage
+        if (!userStorage.existsById(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
         Set<Long> filmLikes = likes.get(filmId);
         if (filmLikes != null) {
             filmLikes.remove(userId);
