@@ -44,12 +44,26 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void addFriend(Long userId, Long friendId) {
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
+        if (!users.containsKey(friendId)) {
+            throw new NotFoundException("Friend with ID " + friendId + " not found");
+        }
+
         friends.computeIfAbsent(userId, k -> new HashSet<>()).add(friendId);
         friends.computeIfAbsent(friendId, k -> new HashSet<>()).add(userId);
     }
 
     @Override
     public void removeFriend(Long userId, Long friendId) {
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
+        if (!users.containsKey(friendId)) {
+            throw new NotFoundException("Friend with ID " + friendId + " not found");
+        }
+
         Set<Long> userFriends = friends.get(userId);
         Set<Long> friendFriends = friends.get(friendId);
         if (userFriends != null) {
@@ -62,6 +76,10 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getFriends(Long userId) {
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
+
         Set<Long> userFriends = friends.get(userId);
         if (userFriends == null) {
             return Collections.emptyList();
@@ -71,6 +89,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(Long userId, Long otherId) {
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
+        if (!users.containsKey(otherId)) {
+            throw new NotFoundException("User with ID " + otherId + " not found");
+        }
+
         Set<Long> userFriends = new HashSet<>(friends.getOrDefault(userId, Collections.emptySet()));
         Set<Long> otherFriends = new HashSet<>(friends.getOrDefault(otherId, Collections.emptySet()));
         userFriends.retainAll(otherFriends);

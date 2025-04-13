@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.Film;
 
 import java.time.LocalDate;
@@ -117,5 +118,21 @@ class FilmControllerTest {
                 new HttpEntity<>(unknownFilm), Void.class);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testAddLikeToUnknownFilm() {
+        Long userId = 1L; // Существующий пользователь
+        Long unknownFilmId = 999L; // Неизвестный фильм
+
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/films/" + unknownFilmId + "/like/" + userId,
+                HttpMethod.PUT,
+                null,
+                ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertTrue(response.getBody().getMessage().contains("Film with ID " + unknownFilmId + " not found"));
     }
 }

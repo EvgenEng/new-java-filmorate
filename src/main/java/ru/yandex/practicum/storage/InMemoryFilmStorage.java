@@ -11,6 +11,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
     private final Map<Long, Set<Long>> likes = new HashMap<>();
     private long idCounter = 1;
+    private HashMap<Object, Object> users;
 
     @Override
     public Film create(Film film) {
@@ -44,11 +45,23 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) {
+        if (!films.containsKey(filmId)) {
+            throw new NotFoundException("Film with ID " + filmId + " not found");
+        }
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
         likes.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
     }
 
     @Override
     public void removeLike(Long filmId, Long userId) {
+        if (!films.containsKey(filmId)) {
+            throw new NotFoundException("Film with ID " + filmId + " not found");
+        }
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("User with ID " + userId + " not found");
+        }
         Set<Long> filmLikes = likes.get(filmId);
         if (filmLikes != null) {
             filmLikes.remove(userId);
