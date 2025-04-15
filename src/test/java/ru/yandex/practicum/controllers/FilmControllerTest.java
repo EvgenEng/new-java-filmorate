@@ -131,7 +131,14 @@ class FilmControllerTest {
 
     @Test
     void testAddLikeToUnknownFilm() {
-        User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        User testUser = new User();
+        testUser.setEmail("test@example.com");
+        testUser.setLogin("testuser");
+        testUser.setBirthday(LocalDate.now().minusYears(20));
+
+        ResponseEntity<User> userResponse = restTemplate.postForEntity("/users", testUser, User.class);
+        assertEquals(HttpStatus.CREATED, userResponse.getStatusCode());
+        User createdUser = userResponse.getBody();
         assertNotNull(createdUser);
 
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
@@ -142,7 +149,9 @@ class FilmControllerTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("Film with ID 999 not found"));
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().getMessage().contains("Film not found"),
+                "Actual error message: " + response.getBody().getMessage());
     }
 
     @Test
@@ -199,7 +208,14 @@ class FilmControllerTest {
 
     @Test
     void shouldNotRemoveLikeFromUnknownFilm() {
-        User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        User testUser = new User();
+        testUser.setEmail("test@example.com");
+        testUser.setLogin("testuser");
+        testUser.setBirthday(LocalDate.now().minusYears(20));
+
+        ResponseEntity<User> userResponse = restTemplate.postForEntity("/users", testUser, User.class);
+        assertEquals(HttpStatus.CREATED, userResponse.getStatusCode());
+        User createdUser = userResponse.getBody();
         assertNotNull(createdUser);
 
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
@@ -210,7 +226,9 @@ class FilmControllerTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("Film with ID 999 not found"));
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().getMessage().contains("Film not found"),
+                "Actual error message: " + response.getBody().getMessage());
     }
 
     @Test

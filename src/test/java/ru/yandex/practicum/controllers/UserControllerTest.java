@@ -118,20 +118,17 @@ class UserControllerTest {
 
     @Test
     public void testRemoveFriendWithUnknownId() {
-        // Создаем существующего пользователя
         User existingUser = new User();
         existingUser.setEmail("test@example.com");
         existingUser.setLogin("testuser");
         existingUser.setBirthday(LocalDate.now().minusYears(20));
 
-        // Сначала создаем пользователя
         ResponseEntity<User> createdResponse = restTemplate.postForEntity("/users", existingUser, User.class);
         assertEquals(HttpStatus.CREATED, createdResponse.getStatusCode());
 
         Long userId = createdResponse.getBody().getId();
         Long unknownFriendId = 999L; // Несуществующий друг
 
-        // Выполняем запрос на удаление друга
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
                 "/users/" + userId + "/friends/" + unknownFriendId,
                 HttpMethod.DELETE,
@@ -139,17 +136,16 @@ class UserControllerTest {
                 ErrorResponse.class
         );
 
-        // Проверяем статус ответа
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 
-        // Проверяем сообщение об ошибке
         assertNotNull(response.getBody());
         String errorMessage = response.getBody().getMessage();
+        System.out.println("Actual error message: " + errorMessage); // Для отладки
 
-        // Используем более гибкую проверку сообщения об ошибке
         assertTrue(
-                errorMessage.contains("Friend with ID " + unknownFriendId + " not found") ||
-                        errorMessage.contains("Friend not found")
+                errorMessage.contains(String.valueOf(unknownFriendId)) &&
+                        errorMessage.contains("not found"),
+                "Expected error message to contain friend ID and 'not found'. Actual: " + errorMessage
         );
     }
 }
