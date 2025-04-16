@@ -26,8 +26,7 @@ public class ErrorHandler {
                 exception.getMessage(),
                 "Bad Request",
                 HttpStatus.BAD_REQUEST,
-                LocalDateTime.now(),
-                null
+                LocalDateTime.now()
         );
     }
 
@@ -39,8 +38,7 @@ public class ErrorHandler {
                 exception.getMessage(),
                 "Not Found",
                 HttpStatus.NOT_FOUND,
-                LocalDateTime.now(),
-                null
+                LocalDateTime.now()
         );
     }
 
@@ -71,8 +69,7 @@ public class ErrorHandler {
                 "Internal Server Error",
                 exception.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                LocalDateTime.now(),
-                null
+                LocalDateTime.now()
         );
     }
 
@@ -84,8 +81,7 @@ public class ErrorHandler {
                 "Unexpected error occurred",
                 throwable.getMessage(),
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                LocalDateTime.now(),
-                null
+                LocalDateTime.now()
         );
     }
 }
