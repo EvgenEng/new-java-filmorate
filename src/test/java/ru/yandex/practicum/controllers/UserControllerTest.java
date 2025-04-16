@@ -13,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
@@ -49,7 +50,7 @@ class UserControllerTest {
     void shouldCreateUser() {
         ResponseEntity<User> response = restTemplate.postForEntity("/users", testUser, User.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getId());
         assertEquals("testlogin", response.getBody().getLogin());
@@ -72,7 +73,7 @@ class UserControllerTest {
 
         ResponseEntity<User> response = restTemplate.postForEntity("/users", created, User.class);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals("Updated Name", response.getBody().getName());
     }
 
@@ -113,5 +114,38 @@ class UserControllerTest {
                 new HttpEntity<>(testUser), Map.class);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testRemoveFriendWithUnknownId() {
+        User existingUser = new User();
+        existingUser.setEmail("test@example.com");
+        existingUser.setLogin("testuser");
+        existingUser.setBirthday(LocalDate.now().minusYears(20));
+
+        ResponseEntity<User> createdResponse = restTemplate.postForEntity("/users", existingUser, User.class);
+        assertEquals(HttpStatus.CREATED, createdResponse.getStatusCode());
+
+        Long userId = createdResponse.getBody().getId();
+        Long unknownFriendId = 999L; // Несуществующий друг
+
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/users/" + userId + "/friends/" + unknownFriendId,
+                HttpMethod.DELETE,
+                null,
+                ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        assertNotNull(response.getBody());
+        String errorMessage = response.getBody().getMessage();
+        System.out.println("Actual error message: " + errorMessage); // Для отладки
+
+        assertTrue(
+                errorMessage.contains(String.valueOf(unknownFriendId)) &&
+                        errorMessage.contains("not found"),
+                "Expected error message to contain friend ID and 'not found'. Actual: " + errorMessage
+        );
     }
 }
