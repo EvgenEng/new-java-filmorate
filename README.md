@@ -2,7 +2,7 @@
 
 ##ER-диаграмма
 
-![ER-диаграмма.](src\main\resources\ER-diagram.png)
+![ER-диаграмма.](src/main/resources/ER-diagram.png)
 
 ### Описание к схеме:
 
