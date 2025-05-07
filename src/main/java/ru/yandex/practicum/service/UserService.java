@@ -2,20 +2,20 @@ package ru.yandex.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.model.User;
 import ru.yandex.practicum.storage.UserStorage;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
-    private final Map<Long, Set<Long>> friendships = new HashMap<>();
+    private final JdbcTemplate jdbcTemplate;
 
     public User addUser(User user) {
         User createdUser = userStorage.create(user);
@@ -41,44 +41,57 @@ public class UserService {
         userStorage.findById(userId);
         userStorage.findById(friendId);
 
-        friendships.computeIfAbsent(userId, k -> new HashSet<>()).add(friendId);
-        friendships.computeIfAbsent(friendId, k -> new HashSet<>()).add(userId);
+        String sql = "INSERT INTO friends (user_id, friend_id, status_id) VALUES (?, ?, 1) " +
+                "ON CONFLICT (user_id, friend_id) DO NOTHING";
+        jdbcTemplate.update(sql, userId, friendId);
         log.info("User {} added friend {}", userId, friendId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        if (!userStorage.existsById(userId)) {
-            throw new NotFoundException("User with ID " + userId + " not found");
-        }
+        String sql = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
+        int deleted = jdbcTemplate.update(sql, userId, friendId);
 
-        if (!userStorage.existsById(friendId)) {
-            throw new NotFoundException("User with ID " + friendId + " not found");
+        if (deleted == 0) {
+            throw new NotFoundException("Friendship not found");
         }
-
-        friendships.getOrDefault(userId, Collections.emptySet()).remove(friendId);
-        friendships.getOrDefault(friendId, Collections.emptySet()).remove(userId);
+        log.info("User {} removed friend {}", userId, friendId);
     }
 
     public List<User> getFriends(Long userId) {
         userStorage.findById(userId);
-        Set<Long> userFriends = friendships.get(userId);
-        if (userFriends == null) {
-            return Collections.emptyList();
-        }
-        return userFriends.stream()
-                .map(userStorage::findById)
-                .collect(Collectors.toList());
+
+        String sql = "SELECT u.* FROM friends f " +
+                "JOIN users u ON f.friend_id = u.user_id " +
+                "WHERE f.user_id = ?";
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            User user = new User();
+            user.setId(rs.getLong("user_id"));
+            user.setEmail(rs.getString("email"));
+            user.setLogin(rs.getString("login"));
+            user.setName(rs.getString("name"));
+            user.setBirthday(rs.getDate("birthday").toLocalDate());
+            return user;
+        }, userId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
         userStorage.findById(userId);
         userStorage.findById(otherId);
 
-        Set<Long> commonIds = new HashSet<>(friendships.getOrDefault(userId, Set.of()));
-        commonIds.retainAll(friendships.getOrDefault(otherId, Set.of()));
+        String sql = "SELECT u.* FROM friends f1 " +
+                "JOIN friends f2 ON f1.friend_id = f2.friend_id " +
+                "JOIN users u ON f1.friend_id = u.user_id " +
+                "WHERE f1.user_id = ? AND f2.user_id = ?";
 
-        return commonIds.stream()
-                .map(userStorage::findById)
-                .collect(Collectors.toList());
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            User user = new User();
+            user.setId(rs.getLong("user_id"));
+            user.setEmail(rs.getString("email"));
+            user.setLogin(rs.getString("login"));
+            user.setName(rs.getString("name"));
+            user.setBirthday(rs.getDate("birthday").toLocalDate());
+            return user;
+        }, userId, otherId);
     }
 }
