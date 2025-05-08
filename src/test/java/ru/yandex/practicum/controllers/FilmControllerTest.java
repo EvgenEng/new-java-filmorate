@@ -6,14 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
 import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.Film;
 import ru.yandex.practicum.model.MpaRating;
 import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -30,7 +30,6 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        // Получаем ID из enum MpaRating
         int mpaId = film.getMpaRating().getId();
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -40,7 +39,7 @@ public class FilmDbStorage implements FilmStorage {
             stmt.setString(2, film.getDescription());
             stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
             stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, mpaId); // Используем правильный ID
+            stmt.setInt(5, mpaId);
             return stmt;
         }, keyHolder);
 
