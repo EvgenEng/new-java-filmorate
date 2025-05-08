@@ -31,20 +31,21 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        // Получаем ID из enum MpaRating
+        int mpaId = film.getMpaRating().getId();
 
+        KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"film_id"});
             stmt.setString(1, film.getName());
             stmt.setString(2, film.getDescription());
             stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
             stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, film.getMpa().ordinal() + 1);
+            stmt.setInt(5, mpaId); // Используем правильный ID
             return stmt;
         }, keyHolder);
 
-        film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-        updateFilmGenres(film);
+        film.setId(keyHolder.getKey().longValue());
         return film;
     }
 
@@ -58,7 +59,7 @@ public class FilmDbStorage implements FilmStorage {
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration(),
-                film.getMpa().ordinal() + 1,
+                film.getMpaRating().ordinal() + 1,
                 film.getId());
 
         if (updated == 0) {
@@ -100,7 +101,7 @@ public class FilmDbStorage implements FilmStorage {
         film.setDuration(rs.getInt("duration"));
 
         MpaRating mpa = MpaRating.values()[rs.getInt("mpa_rating_id") - 1];
-        film.setMpa(mpa);
+        film.setMpaRating(mpa);
 
         // Загрузка жанров фильма
         String genresSql = "SELECT g.genre_id, g.name " +

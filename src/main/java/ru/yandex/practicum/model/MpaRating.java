@@ -1,9 +1,11 @@
 package ru.yandex.practicum.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 
 import java.util.Arrays;
 
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @Getter
 public enum MpaRating {
     G(1, "G", "У фильма нет возрастных ограничений"),

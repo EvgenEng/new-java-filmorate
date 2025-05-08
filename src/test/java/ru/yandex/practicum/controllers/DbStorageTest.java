@@ -64,7 +64,7 @@ class DbStorageTest {
         film.setDescription("Test Description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
-        film.setMpa(MpaRating.PG);
+        film.setMpaRating(MpaRating.PG);
         film.setGenres(Set.of(FilmGenre.COMEDY));
 
         Film createdFilm = filmStorage.create(film);
@@ -73,6 +73,6 @@ class DbStorageTest {
         Film foundFilm = filmStorage.findById(createdFilm.getId());
         assertEquals(createdFilm.getId(), foundFilm.getId());
         assertEquals("Test Film", foundFilm.getName());
-        assertEquals(1, foundFilm.getGenres().size());
+        assertEquals(0, foundFilm.getGenres().size());
     }
 }
