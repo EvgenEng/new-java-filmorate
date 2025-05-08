@@ -43,11 +43,12 @@ class FilmControllerTest {
     @Test
     void shouldCreateFilm() {
         String filmJson = """
-        {"name": "Тестовый фильм",
-        "description": "Тестовое описание",
-        "releaseDate": "2023-01-01",
-        "duration": 90,
-        "mpa": {"id": 1}
+        {
+            "name": "Тестовый фильм",
+            "description": "Тестовое описание",
+            "releaseDate": "2023-01-01",
+            "duration": 90,
+            "mpa": {"id": 1}
         }
         """;
 
