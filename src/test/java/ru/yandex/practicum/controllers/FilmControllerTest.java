@@ -42,15 +42,8 @@ class FilmControllerTest {
 
     @Test
     void shouldCreateFilm() {
-        String filmJson = """
-        {
-            "name": "Тестовый фильм",
-            "description": "Тестовое описание",
-            "releaseDate": "2023-01-01",
-            "duration": 90,
-            "mpa": {"id": 1}
-        }
-        """;
+        String filmJson = "{\"name\":\"Тестовый фильм\",\"description\":\"Тестовое описание\"," +
+                "\"releaseDate\":\"2023-01-01\",\"duration\":90,\"mpa\":{\"id\":1}}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
