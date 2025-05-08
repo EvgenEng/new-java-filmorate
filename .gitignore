@@ -40,3 +40,18 @@ build/
 *.xml
 .idea/
 .github/
+
+# Бинарные файлы БД
+db/*.db
+db/*.trace.db
+
+# Скомпилированные файлы
+*.class
+*.jar
+target/
+bin/
+
+# Системные файлы
+.DS_Store
+*.iml
+.idea/
