@@ -6,8 +6,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.model.Film;
-import ru.yandex.practicum.model.FilmGenre;
-import ru.yandex.practicum.model.MpaRating;
 import ru.yandex.practicum.model.User;
 import lombok.RequiredArgsConstructor;
 import ru.yandex.practicum.storage.FilmDbStorage;
@@ -64,8 +62,8 @@ class DbStorageTest {
         film.setDescription("Test Description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
-        film.setMpaRating(MpaRating.PG);
-        film.setGenres(Set.of(FilmGenre.COMEDY));
+        film.setMpaId(2); // PG имеет id = 2
+        film.setGenreIds(Set.of(1)); // COMEDY имеет id = 1
 
         Film createdFilm = filmStorage.create(film);
         assertNotNull(createdFilm.getId());
@@ -73,6 +71,31 @@ class DbStorageTest {
         Film foundFilm = filmStorage.findById(createdFilm.getId());
         assertEquals(createdFilm.getId(), foundFilm.getId());
         assertEquals("Test Film", foundFilm.getName());
-        assertEquals(0, foundFilm.getGenres().size());
+        assertEquals(1, foundFilm.getGenreIds().size()); // Проверяем количество жанров
+        assertTrue(foundFilm.getGenreIds().contains(1)); // Проверяем наличие жанра COMEDY
+    }
+
+    @Test
+    void testUpdateFilm() {
+        Film film = new Film();
+        film.setName("Test Film");
+        film.setDescription("Test Description");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(120);
+        film.setMpaId(1); // G имеет id = 1
+        film.setGenreIds(Set.of(2)); // DRAMA имеет id = 2
+
+        Film createdFilm = filmStorage.create(film);
+
+        createdFilm.setName("Updated Film");
+        createdFilm.setMpaId(3); // PG-13 имеет id = 3
+        createdFilm.setGenreIds(Set.of(1, 3)); // COMEDY (1) и ANIMATION (3)
+
+        Film updatedFilm = filmStorage.update(createdFilm);
+
+        assertEquals("Updated Film", updatedFilm.getName());
+        assertEquals(3, updatedFilm.getMpaId());
+        assertEquals(2, updatedFilm.getGenreIds().size());
+        assertTrue(updatedFilm.getGenreIds().containsAll(Set.of(1, 3)));
     }
 }
