@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MpaDto {
-    private int id; // ID MPA
-    private String name; // Название MPA
+public class GenreDto {
+    private int id; // ID жанра
+    private String name; // Название жанра
 }

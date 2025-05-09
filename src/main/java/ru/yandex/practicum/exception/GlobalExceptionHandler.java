@@ -1,94 +1,70 @@
 package ru.yandex.practicum.exception;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex,
-            WebRequest request
-    ) {
-        Throwable rootCause = ex.getRootCause();
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
 
-        if (rootCause instanceof DateTimeParseException) {
-            return handleDateTimeParseException((DateTimeParseException) rootCause, request);
-        }
-
-        if (rootCause instanceof InvalidFormatException) {
-            return handleInvalidFormatException((InvalidFormatException) rootCause, request);
-        }
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                "Invalid request format",
-                "Malformed JSON request",
-                HttpStatus.BAD_REQUEST,
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(DateTimeParseException.class)
-    public ResponseEntity<ErrorResponse> handleDateTimeParseException(
-            DateTimeParseException ex,
-            WebRequest request
-    ) {
         ErrorResponse errorResponse = new ErrorResponse(
                 "Validation failed",
-                "Invalid date format. Required format: yyyy-MM-dd",
+                "Invalid request parameters",
                 HttpStatus.BAD_REQUEST,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                errors
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    @ExceptionHandler(InvalidFormatException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidFormatException(
-            InvalidFormatException ex,
-            WebRequest request
-    ) {
-        if (ex.getTargetType() != null && ex.getTargetType().equals(java.time.LocalDate.class)) {
-            ErrorResponse errorResponse = new ErrorResponse(
-                    "Validation failed",
-                    "Invalid date format. Required format: yyyy-MM-dd",
-                    HttpStatus.BAD_REQUEST,
-                    LocalDateTime.now()
-            );
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        }
-
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
-                "Invalid request format",
-                String.format("Invalid value '%s' for field %s",
-                        ex.getValue(),
-                        ex.getPath().get(0).getFieldName()),
-                HttpStatus.BAD_REQUEST,
-                LocalDateTime.now()
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex,
-            WebRequest request
-    ) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                "Internal server error",
+                "Invalid data",
                 ex.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR,
+                HttpStatus.BAD_REQUEST,
                 LocalDateTime.now()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(new ErrorResponse(
+                        ex.getReason(),
+                        ex.getReason(),
+                        HttpStatus.valueOf(ex.getStatusCode().value()),
+                        LocalDateTime.now(),
+                        null
+                ));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        ex.getMessage(),
+                        "Not Found",
+                        HttpStatus.NOT_FOUND,
+                        LocalDateTime.now(),
+                        null
+                ));
     }
 }

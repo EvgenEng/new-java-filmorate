@@ -5,12 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.model.Film;
+import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.service.FilmService;
 import jakarta.validation.Valid;
 
-import java.util.HashSet;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
@@ -21,26 +25,14 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<Film> createFilm(@Valid @RequestBody Film filmRequest) {
-        Film film = new Film();
-
-        film.setName(filmRequest.getName());
-        film.setDescription(filmRequest.getDescription());
-        film.setReleaseDate(filmRequest.getReleaseDate());
-        film.setDuration(filmRequest.getDuration());
-
-        film.setMpaId(filmRequest.getMpaId());
-
-        if (filmRequest.getGenreIds() != null) {
-            film.setGenreIds(new HashSet<>(filmRequest.getGenreIds()));
-        }
-
-        Film createdFilm = filmService.addFilm(film);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm);
+        Film createdFilm = filmService.addFilm(filmRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(createdFilm);
     }
 
-    @PutMapping
-    public Film update(@Valid @RequestBody Film film) {
+    @PutMapping("/{id}")
+    public Film update(@PathVariable Long id, @Valid @RequestBody Film film) {
+        film.setId(id); // Устанавливаем ID для обновления
         return filmService.updateFilm(film);
     }
 
@@ -67,5 +59,22 @@ public class FilmController {
     @GetMapping("/popular")
     public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
         return filmService.getPopularFilms(count);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(
+                        "Validation error",
+                        "Invalid request parameters",
+                        HttpStatus.BAD_REQUEST,
+                        LocalDateTime.now(),
+                        errors
+                ));
     }
 }

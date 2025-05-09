@@ -94,6 +94,7 @@ public class FilmServiceTest {
                 .post("/films")
                 .then()
                 .statusCode(400)
-                .body("message", containsString("Validation failed"));
+                .body("message", containsString("Validation error")) // Изменено с "failed" на "error"
+                .body("errors.name", notNullValue()); // Дополнительная проверка наличия ошибки для поля name
     }
 }

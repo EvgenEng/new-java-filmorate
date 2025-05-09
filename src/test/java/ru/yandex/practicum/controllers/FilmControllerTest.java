@@ -180,14 +180,16 @@ class FilmControllerTest {
         unknownFilm.setDuration(120);
         unknownFilm.setMpaId(1);
 
-        ResponseEntity<Void> response = restTemplate.exchange(
-                "/films",
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/films/" + unknownFilm.getId(),
                 HttpMethod.PUT,
                 new HttpEntity<>(unknownFilm),
-                Void.class
+                ErrorResponse.class
         );
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Film not found", response.getBody().getMessage());
     }
 
     @Test
