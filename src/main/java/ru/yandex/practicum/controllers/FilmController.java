@@ -9,6 +9,7 @@ import ru.yandex.practicum.model.Film;
 import ru.yandex.practicum.service.FilmService;
 import jakarta.validation.Valid;
 
+import java.util.HashSet;
 import java.util.List;
 
 @RestController
@@ -19,8 +20,22 @@ public class FilmController {
     private final FilmService filmService;
 
     @PostMapping
-    public ResponseEntity<Film> createFilm(@Valid @RequestBody Film film) {
+    public ResponseEntity<Film> createFilm(@Valid @RequestBody Film filmRequest) {
+        Film film = new Film();
+
+        film.setName(filmRequest.getName());
+        film.setDescription(filmRequest.getDescription());
+        film.setReleaseDate(filmRequest.getReleaseDate());
+        film.setDuration(filmRequest.getDuration());
+
+        film.setMpaId(filmRequest.getMpaId());
+
+        if (filmRequest.getGenreIds() != null) {
+            film.setGenreIds(new HashSet<>(filmRequest.getGenreIds()));
+        }
+
         Film createdFilm = filmService.addFilm(film);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(createdFilm);
     }
 
