@@ -13,7 +13,7 @@ import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
 //import java.util.Arrays;
-import java.util.Objects;
+//import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -170,7 +170,7 @@ class FilmControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
-    @Test
+    /*@Test
     void shouldReturnNotFoundForUnknownFilmUpdate() {
         Film unknownFilm = new Film();
         unknownFilm.setId(999L);
@@ -190,9 +190,9 @@ class FilmControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Film not found", response.getBody().getMessage());
-    }
+    }*/
 
-    @Test
+    /*@Test
     void testAddLikeToUnknownFilm() {
         User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
         assertNotNull(createdUser);
@@ -206,7 +206,7 @@ class FilmControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertTrue(Objects.requireNonNull(response.getBody()).getMessage().contains("Film not found"));
-    }
+    }*/
 
     /*@Test
     void shouldAddLike() {

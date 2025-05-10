@@ -1,38 +1,28 @@
 package ru.yandex.practicum.controllers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.exception.NotFoundException;
-import ru.yandex.practicum.model.MpaRating;
 import ru.yandex.practicum.model.MpaDto;
-
+import ru.yandex.practicum.service.MpaService;
 import java.util.List;
 
 @RestController
 @RequestMapping("/mpa")
 @RequiredArgsConstructor
+@Slf4j
 public class MpaController {
-    private final JdbcTemplate jdbcTemplate;
+    private final MpaService mpaService;
 
     @GetMapping
     public List<MpaDto> getAllMpa() {
-        String sql = "SELECT * FROM mpa_ratings ORDER BY mpa_id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            MpaRating mpaRating = MpaRating.values()[rs.getInt("mpa_id") - 1];
-            return new MpaDto(mpaRating.ordinal() + 1, mpaRating.name());
-        });
+        log.info("Getting all MPA ratings");
+        return mpaService.getAllMpaRatings();
     }
 
     @GetMapping("/{id}")
     public MpaDto getMpa(@PathVariable int id) {
-        String sql = "SELECT * FROM mpa_ratings WHERE mpa_id = ?";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-                    MpaRating mpaRating = MpaRating.values()[rs.getInt("mpa_id") - 1];
-                    return new MpaDto(mpaRating.ordinal() + 1, mpaRating.name());
-                }, id)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("MPA rating not found"));
+        log.info("Getting MPA rating with ID: {}", id);
+        return mpaService.getMpaById(id);
     }
 }

@@ -1,8 +1,6 @@
 package ru.yandex.practicum.controllers;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,21 +9,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.exception.NotFoundException;
-import ru.yandex.practicum.model.Film;
+import ru.yandex.practicum.exception.ValidationException;
+import ru.yandex.practicum.model.*;
 import ru.yandex.practicum.exception.ErrorResponse;
-import ru.yandex.practicum.model.FilmGenre;
-import ru.yandex.practicum.model.GenreDto;
-import ru.yandex.practicum.model.MpaDto;
 import ru.yandex.practicum.service.FilmService;
+import ru.yandex.practicum.service.MpaService;
+import ru.yandex.practicum.service.GenreService;
 import jakarta.validation.Valid;
+import ru.yandex.practicum.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors; // Импортируем Collectors
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/films")
@@ -33,55 +29,88 @@ import java.util.stream.Collectors; // Импортируем Collectors
 @RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
+    private final MpaService mpaService;
+    private final GenreService genreService;
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        Film film = convertToFilm(filmRequest);
+        log.info("Creating new film: {}", filmRequest.getName());
+        Film film = convertRequestToFilm(filmRequest);
+        validateMpa(film.getMpaId());
         Film createdFilm = filmService.addFilm(film);
+        log.info("Created film with ID: {}", createdFilm.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }
 
     @PutMapping("/{id}")
     public FilmResponse update(@PathVariable Long id, @Valid @RequestBody FilmRequest filmRequest) {
-        Film film = convertToFilm(filmRequest);
+        log.info("Updating film with ID: {}", id);
+        Film film = convertRequestToFilm(filmRequest);
         film.setId(id);
+        validateMpa(film.getMpaId());
         Film updatedFilm = filmService.updateFilm(film);
+        log.info("Film with ID {} updated successfully", id);
         return convertToFilmResponse(updatedFilm);
     }
 
     @GetMapping
-    public List<Film> findAll() {
-        return filmService.getAllFilms();
+    public ResponseEntity<List<FilmResponse>> getAllFilms() {
+        log.info("Getting all films");
+        List<FilmResponse> films = filmService.getAllFilms().stream()
+                .map(this::convertToFilmResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(films);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<FilmResponse> getFilm(@PathVariable Long id) {
+        log.info("Getting film with ID: {}", id);
         Film film = filmService.getFilmById(id);
         return ResponseEntity.ok(convertToFilmResponse(film));
     }
 
-    @PutMapping("/{id}/like/{userId}")
-    public ResponseEntity<Void> addLike(@PathVariable Long id, @PathVariable Long userId) {
-        filmService.addLike(id, userId);
-        return ResponseEntity.ok().build();
+    @GetMapping("/popular")
+    public ResponseEntity<List<FilmResponse>> getPopularFilms(
+            @RequestParam(defaultValue = "10") @Min(1) int count) {
+        log.info("Getting top {} popular films", count);
+        List<FilmResponse> films = filmService.getPopularFilms(count).stream()
+                .map(this::convertToFilmResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(films);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
-    public ResponseEntity<Void> removeLike(
-            @PathVariable Long id,
+    @PutMapping("/{filmId}/like/{userId}")
+    public ResponseEntity<Void> addLike(
+            @PathVariable Long filmId,
             @PathVariable Long userId) {
+
+        log.info("Adding like from user {} to film {}", userId, filmId);
+
         try {
-            filmService.removeLike(id, userId);
+            filmService.addLike(filmId, userId);
             return ResponseEntity.ok().build();
         } catch (NotFoundException e) {
+            log.error("Error adding like: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopularFilms(count);
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public ResponseEntity<Void> removeLike(
+            @PathVariable Long filmId,
+            @PathVariable Long userId) {
+
+        log.info("Removing like from user {} to film {}", userId, filmId);
+
+        try {
+            filmService.removeLike(filmId, userId);
+            return ResponseEntity.ok().build();
+        } catch (NotFoundException e) {
+            log.error("Error removing like: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -91,6 +120,7 @@ public class FilmController {
             errors.put(error.getField(), error.getDefaultMessage());
         });
 
+        log.error("Validation error: {}", errors);
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(
                         "Validation error",
@@ -101,13 +131,64 @@ public class FilmController {
                 ));
     }
 
+    private Film convertRequestToFilm(FilmRequest filmRequest) {
+        Film film = new Film();
+        film.setName(filmRequest.getName());
+        film.setDescription(filmRequest.getDescription());
+        film.setReleaseDate(filmRequest.getReleaseDate());
+        film.setDuration(filmRequest.getDuration());
+        film.setMpaId(filmRequest.getMpaId());
+
+        if (filmRequest.getGenreIds() != null) {
+            film.setGenreIds(new HashSet<>(filmRequest.getGenreIds()));
+        }
+
+        return film;
+    }
+
+    private FilmResponse convertToFilmResponse(Film film) {
+        FilmResponse response = new FilmResponse();
+        response.setId(film.getId());
+        response.setName(film.getName());
+        response.setDescription(film.getDescription());
+        response.setReleaseDate(film.getReleaseDate());
+        response.setDuration(film.getDuration());
+
+        if (film.getMpaId() != null) {
+            response.setMpa(mpaService.getMpaById(film.getMpaId()));
+        }
+
+        if (film.getGenreIds() != null && !film.getGenreIds().isEmpty()) {
+            response.setGenres(film.getGenreIds().stream()
+                    .distinct()
+                    .map(genreService::getGenreDto)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
+        }
+
+        return response;
+    }
+
+    private void validateMpa(Integer mpaId) {
+        if (mpaId == null) {
+            log.error("Validation failed: MPA ID cannot be null");
+            throw new ValidationException("MpaId cannot be null");
+        }
+        if (!mpaService.existsById(mpaId)) {
+            log.error("MPA with ID {} not found", mpaId);
+            throw new NotFoundException("MPA not found with id: " + mpaId);
+        }
+    }
+
     @Data
     public static class FilmRequest {
-        @NotBlank
+        @NotBlank(message = "Film name cannot be blank")
         private String name;
-        @Size(max = 200) private String description;
+        @Size(max = 200, message = "Description must be less than 200 characters")
+        private String description;
+        @PastOrPresent(message = "Release date cannot be in the future")
         private LocalDate releaseDate;
-        @Positive
+        @Positive(message = "Duration must be positive")
         private int duration;
         private Integer mpaId;
         private Set<Integer> genreIds;
@@ -122,49 +203,5 @@ public class FilmController {
         private int duration;
         private MpaDto mpa;
         private Set<GenreDto> genres;
-    }
-
-    private Film convertToFilm(FilmRequest filmRequest) {
-        Film film = new Film();
-        film.setName(filmRequest.getName());
-        film.setDescription(filmRequest.getDescription());
-        film.setReleaseDate(filmRequest.getReleaseDate());
-        film.setDuration(filmRequest.getDuration());
-        film.setMpaId(filmRequest.getMpaId());
-        film.setGenreIds(filmRequest.getGenreIds());
-        return film;
-    }
-
-    private FilmResponse convertToFilmResponse(Film film) {
-        FilmResponse response = new FilmResponse();
-        response.setId(film.getId());
-        response.setName(film.getName());
-        response.setDescription(film.getDescription());
-        response.setReleaseDate(film.getReleaseDate());
-        response.setDuration(film.getDuration());
-
-        // Исправляем получение MPA
-        if (film.getMpaId() != null) {
-            response.setMpa(new MpaDto(film.getMpaId(), getMpaName(film.getMpaId())));
-        }
-
-        // Исправляем получение жанров
-        if (film.getGenres() != null) {
-            response.setGenres(film.getGenres().stream()
-                    .map(genre -> new GenreDto(genre.getId(), getGenreName(genre.getId())))
-                    .collect(Collectors.toSet()));
-        }
-
-        return response;
-    }
-
-    private String getMpaName(Integer mpaId) {
-        // Логика для получения названия MPA по ID
-        return "MPA Name"; // Заменить на реальную логику
-    }
-
-    private String getGenreName(Integer genreId) {
-        FilmGenre genre = FilmGenre.values()[genreId - 1];
-        return genre.getRussianName();
     }
 }

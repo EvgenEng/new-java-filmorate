@@ -30,4 +30,8 @@ public enum MpaRating {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown MPA rating id: " + id));
     }
+
+    public String getName() {
+        return this.code;
+    }
 }
