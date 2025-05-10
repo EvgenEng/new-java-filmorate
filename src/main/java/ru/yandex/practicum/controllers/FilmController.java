@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.exception.NotFoundException;
@@ -47,10 +49,12 @@ public class FilmController {
     }*/
 
     @PostMapping
-    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        // Проверка существования MPA
-        if (!mpaService.existsById(filmRequest.getMpa().getId())) {
-            throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
+    public ResponseEntity<FilmResponse> createFilm(
+            @Valid @RequestBody FilmRequest filmRequest,
+            BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            throw new ValidationException("Validation error", getValidationErrors(bindingResult));
         }
 
         // Проверка существования жанров
@@ -66,6 +70,15 @@ public class FilmController {
         Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
+    }
+
+    private Map<String, String> getValidationErrors(BindingResult bindingResult) {
+        return bindingResult.getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (existing, replacement) -> existing
+                ));
     }
 
     @PutMapping("/{id}")
