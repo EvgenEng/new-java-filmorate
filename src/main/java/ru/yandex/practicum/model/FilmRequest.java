@@ -2,7 +2,7 @@ package ru.yandex.practicum.model;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import ru.yandex.practicum.validators.ValidReleaseDate;
+//import ru.yandex.practicum.validators.ValidReleaseDate;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -17,7 +17,8 @@ public class FilmRequest {
     private String description;
 
     @NotNull(message = "Release date cannot be null")
-    @ValidReleaseDate(message = "Release date must be after 1895-12-28")
+    @PastOrPresent
+    //@ValidReleaseDate(message = "Release date must be after 1895-12-28")
     private LocalDate releaseDate;
 
     @Positive(message = "Duration must be positive")
@@ -28,9 +29,9 @@ public class FilmRequest {
 
     private Set<GenreDto> genres = new HashSet<>();
 
-    // Дополнительная проверка для даты релиза
+    // Добавьте этот метод с аннотацией
     @AssertTrue(message = "Release date must be after 1895-12-28")
-    private boolean isReleaseDateValid() {
-        return releaseDate == null || !releaseDate.isBefore(LocalDate.of(1895, 12, 28));
+    public boolean isReleaseDateValid() {
+        return releaseDate == null || releaseDate.isAfter(LocalDate.of(1895, 12, 28));
     }
 }

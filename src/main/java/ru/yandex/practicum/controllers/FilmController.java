@@ -33,7 +33,7 @@ public class FilmController {
     private final GenreService genreService;
     private final UserService userService;
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         log.info("Creating new film: {}", filmRequest.getName());
         Film film = convertRequestToFilm(filmRequest);
@@ -41,6 +41,22 @@ public class FilmController {
         validateGenres(film.getGenreIds());
         Film createdFilm = filmService.addFilm(film);
         log.info("Created film with ID: {}", createdFilm.getId());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(convertToFilmResponse(createdFilm));
+    }*/
+
+    @PostMapping
+    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
+        // Уберите ручную проверку даты - она теперь в FilmRequest
+
+        log.info("Creating new film: {}", filmRequest.getName());
+        Film film = convertRequestToFilm(filmRequest);
+        validateMpa(film.getMpaId());
+        validateGenres(film.getGenreIds());
+
+        Film createdFilm = filmService.addFilm(film);
+        log.info("Created film with ID: {}", createdFilm.getId());
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }
