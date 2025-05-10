@@ -7,6 +7,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.exception.NotFoundException;
+import ru.yandex.practicum.exception.ValidationException; // Импортируем ValidationException
 import ru.yandex.practicum.model.Film;
 
 import java.sql.Date;
@@ -26,6 +27,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
+        // Проверка на null для mpaId
+        if (film.getMpaId() == null) {
+            throw new ValidationException("MpaId cannot be null");
+        }
+
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
 

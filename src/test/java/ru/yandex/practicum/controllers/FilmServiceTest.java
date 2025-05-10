@@ -24,8 +24,9 @@ public class FilmServiceTest {
 
     @Test
     public void testCreateFilm() {
+        // 1. Исправляем поле mpa → mpaId в JSON
         String filmJson = "{\"name\":\"Inception\",\"description\":\"A thief who steals corporate secrets\"," +
-                "\"releaseDate\":\"2010-07-16\",\"duration\":148,\"mpa\":3,\"genres\":[1,2]}";
+                "\"releaseDate\":\"2010-07-16\",\"duration\":148,\"mpaId\":3,\"genres\":[1,2]}";
 
         given()
                 .contentType(ContentType.JSON)
@@ -36,7 +37,9 @@ public class FilmServiceTest {
                 .statusCode(201)
                 .body("id", notNullValue())
                 .body("name", equalTo("Inception"))
-                .body("mpa", equalTo(3));
+                // 2. Проверяем структуру MPA в ответе
+                .body("mpa.id", equalTo(3))
+                .body("mpa.name", notNullValue());
     }
 
     @Test
@@ -56,7 +59,6 @@ public class FilmServiceTest {
 
     @Test
     public void testGetFilmById() {
-        // Предполагается, что фильм с ID 1 существует
         given()
                 .when()
                 .get("/films/1")
@@ -69,7 +71,7 @@ public class FilmServiceTest {
     @Test
     public void testCreateFilm_ValidData() {
         String validFilmJson = "{\"name\":\"Valid Film\",\"description\":\"A valid description\"," +
-                "\"releaseDate\":\"2025-05-09\",\"duration\":90,\"mpa\":1,\"genres\":[]}";
+                "\"releaseDate\":\"2025-05-09\",\"duration\":90,\"mpaId\":1,\"genres\":[]}";
 
         given()
                 .contentType(ContentType.JSON)
@@ -77,7 +79,7 @@ public class FilmServiceTest {
                 .when()
                 .post("/films")
                 .then()
-                .statusCode(201) // Ожидаем статус 201 для успешного создания
+                .statusCode(201)
                 .body("id", notNullValue())
                 .body("name", equalTo("Valid Film"));
     }

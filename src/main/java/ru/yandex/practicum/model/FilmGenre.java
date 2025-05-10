@@ -10,14 +10,18 @@ public enum FilmGenre {
     DOCUMENTARY("Документальный"),
     ACTION("Боевик");
 
-    private final String name;
+    private final String russianName;
 
-    FilmGenre(String name) {
-        this.name = name;
+    FilmGenre(String russianName) {
+        this.russianName = russianName;
     }
 
     @JsonValue
-    public String getName() {
-        return name;
+    public String getRussianName() {
+        return russianName;
+    }
+
+    public int getId() {
+        return this.ordinal() + 1;
     }
 }

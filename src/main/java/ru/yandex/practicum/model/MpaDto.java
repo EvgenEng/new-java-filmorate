@@ -8,4 +8,8 @@ import lombok.Data;
 public class MpaDto {
     private int id; // ID MPA
     private String name; // Название MPA
+
+    public String getName() {
+        return this.name.replace("_", "-");
+    }
 }

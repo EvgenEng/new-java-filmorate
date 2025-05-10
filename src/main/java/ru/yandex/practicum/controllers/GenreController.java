@@ -8,6 +8,7 @@ import ru.yandex.practicum.model.FilmGenre;
 import ru.yandex.practicum.model.GenreDto;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/genres")
@@ -17,11 +18,9 @@ public class GenreController {
 
     @GetMapping
     public List<GenreDto> getAllGenres() {
-        String sql = "SELECT * FROM genres ORDER BY genre_id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            FilmGenre filmGenre = FilmGenre.values()[rs.getInt("genre_id") - 1];
-            return new GenreDto(filmGenre.ordinal() + 1, filmGenre.name());
-        });
+        return List.of(FilmGenre.values()).stream()
+                .map(g -> new GenreDto(g.ordinal() + 1, g.getRussianName()))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -29,7 +28,7 @@ public class GenreController {
         String sql = "SELECT * FROM genres WHERE genre_id = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
                     FilmGenre filmGenre = FilmGenre.values()[rs.getInt("genre_id") - 1];
-                    return new GenreDto(filmGenre.ordinal() + 1, filmGenre.name());
+                    return new GenreDto(filmGenre.ordinal() + 1, filmGenre.getRussianName());
                 }, id)
                 .stream()
                 .findFirst()
