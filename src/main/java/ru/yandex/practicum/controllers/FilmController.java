@@ -47,16 +47,18 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        // Уберите ручную проверку даты - она теперь в FilmRequest
+        // Дополнительная проверка (на случай если валидация не сработает)
+        if (filmRequest.getReleaseDate().isBefore(LocalDate.of(1895, 12, 29))) {
+            throw new ValidationException(
+                    "Invalid release date",
+                    "releaseDate",
+                    "Must be after 1895-12-28"
+            );
+        }
 
-        log.info("Creating new film: {}", filmRequest.getName());
+        // Остальная логика создания фильма
         Film film = convertRequestToFilm(filmRequest);
-        validateMpa(film.getMpaId());
-        validateGenres(film.getGenreIds());
-
         Film createdFilm = filmService.addFilm(film);
-        log.info("Created film with ID: {}", createdFilm.getId());
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }
