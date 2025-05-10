@@ -182,7 +182,8 @@ public class FilmController {
                     .distinct()
                     .map(genreService::getGenreDto)
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toSet()));
+                    .sorted(Comparator.comparingInt(GenreDto::getId))
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
         }
 
         return response;
