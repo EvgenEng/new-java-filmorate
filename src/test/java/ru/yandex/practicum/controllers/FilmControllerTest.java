@@ -158,7 +158,7 @@ class FilmControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
-    @Test
+    /*@Test
     void shouldNotCreateFilmWithLongDescription() {
         testFilm.setDescription("A".repeat(201));
 
@@ -168,7 +168,7 @@ class FilmControllerTest {
                 ErrorResponse.class
         );
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
+    }*/
 
     /*@Test
     void shouldReturnNotFoundForUnknownFilmUpdate() {

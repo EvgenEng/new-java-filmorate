@@ -40,4 +40,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         return film;
     }
+
+    @Override
+    public boolean existsById(Long filmId) {
+        return films.containsKey(filmId);
+    }
 }

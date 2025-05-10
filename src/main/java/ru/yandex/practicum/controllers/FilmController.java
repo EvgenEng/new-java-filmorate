@@ -38,6 +38,7 @@ public class FilmController {
         log.info("Creating new film: {}", filmRequest.getName());
         Film film = convertRequestToFilm(filmRequest);
         validateMpa(film.getMpaId());
+        validateGenres(film.getGenreIds());
         Film createdFilm = filmService.addFilm(film);
         log.info("Created film with ID: {}", createdFilm.getId());
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -50,6 +51,7 @@ public class FilmController {
         Film film = convertRequestToFilm(filmRequest);
         film.setId(id);
         validateMpa(film.getMpaId());
+        validateGenres(film.getGenreIds());
         Film updatedFilm = filmService.updateFilm(film);
         log.info("Film with ID {} updated successfully", id);
         return convertToFilmResponse(updatedFilm);
@@ -69,6 +71,16 @@ public class FilmController {
         log.info("Getting film with ID: {}", id);
         Film film = filmService.getFilmById(id);
         return ResponseEntity.ok(convertToFilmResponse(film));
+    }
+
+    @PutMapping
+    public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
+        log.info("Updating film");
+        Film film = convertRequestToFilm(filmRequest);
+        validateMpa(film.getMpaId());
+        validateGenres(film.getGenreIds());
+        Film updatedFilm = filmService.updateFilm(film);
+        return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
     }
 
     @GetMapping("/popular")
@@ -137,10 +149,17 @@ public class FilmController {
         film.setDescription(filmRequest.getDescription());
         film.setReleaseDate(filmRequest.getReleaseDate());
         film.setDuration(filmRequest.getDuration());
-        film.setMpaId(filmRequest.getMpaId());
 
-        if (filmRequest.getGenreIds() != null) {
-            film.setGenreIds(new HashSet<>(filmRequest.getGenreIds()));
+        // MPA
+        if (filmRequest.getMpa() != null) {
+            film.setMpaId(filmRequest.getMpa().getId());
+        }
+
+        // Жанры
+        if (filmRequest.getGenres() != null) {
+            film.setGenreIds(filmRequest.getGenres().stream()
+                    .map(GenreDto::getId)
+                    .collect(Collectors.toSet()));
         }
 
         return film;
@@ -180,18 +199,34 @@ public class FilmController {
         }
     }
 
+    private void validateGenres(Set<Integer> genreIds) {
+        if (genreIds != null) {
+            for (Integer genreId : genreIds) {
+                if (genreService.getGenreDto(genreId) == null) {
+                    throw new NotFoundException("Genre not found with id: " + genreId);
+                }
+            }
+        }
+    }
+
     @Data
     public static class FilmRequest {
         @NotBlank(message = "Film name cannot be blank")
         private String name;
+
         @Size(max = 200, message = "Description must be less than 200 characters")
         private String description;
+
         @PastOrPresent(message = "Release date cannot be in the future")
         private LocalDate releaseDate;
+
         @Positive(message = "Duration must be positive")
         private int duration;
-        private Integer mpaId;
-        private Set<Integer> genreIds;
+
+        @NotNull
+        private MpaDto mpa;
+
+        private Set<GenreDto> genres = new HashSet<>();
     }
 
     @Data

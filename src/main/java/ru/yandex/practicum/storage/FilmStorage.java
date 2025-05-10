@@ -14,4 +14,6 @@ public interface FilmStorage {
     List<Film> findAll();
 
     Film findById(Long id) throws NotFoundException;
+
+    boolean existsById(Long filmId);
 }
