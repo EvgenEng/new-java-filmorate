@@ -2,6 +2,7 @@ package ru.yandex.practicum.controllers;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class FilmController {
     private final GenreService genreService;
     private final UserService userService;
 
-    /*@PostMapping
+    @PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         log.info("Creating new film: {}", filmRequest.getName());
         Film film = convertRequestToFilm(filmRequest);
@@ -41,24 +42,6 @@ public class FilmController {
         validateGenres(film.getGenreIds());
         Film createdFilm = filmService.addFilm(film);
         log.info("Created film with ID: {}", createdFilm.getId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(convertToFilmResponse(createdFilm));
-    }*/
-
-    @PostMapping
-    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        // Дополнительная проверка (на случай если валидация не сработает)
-        if (filmRequest.getReleaseDate().isBefore(LocalDate.of(1895, 12, 29))) {
-            throw new ValidationException(
-                    "Invalid release date",
-                    "releaseDate",
-                    "Must be after 1895-12-28"
-            );
-        }
-
-        // Остальная логика создания фильма
-        Film film = convertRequestToFilm(filmRequest);
-        Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }
@@ -91,12 +74,31 @@ public class FilmController {
         return ResponseEntity.ok(convertToFilmResponse(film));
     }
 
-    @PutMapping
+    /*@PutMapping
     public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
         log.info("Updating film");
         Film film = convertRequestToFilm(filmRequest);
         validateMpa(film.getMpaId());
         validateGenres(film.getGenreIds());
+        Film updatedFilm = filmService.updateFilm(film);
+        return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
+    }*/
+
+    @PutMapping
+    public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
+        // Проверка на null ID
+        if (filmRequest.getId() == null) {
+            throw new ValidationException("Film ID cannot be null for update");
+        }
+
+        log.info("Updating film with ID: {}", filmRequest.getId());
+        Film film = convertRequestToFilm(filmRequest);
+
+        // Явная проверка существования фильма
+        if (!filmService.existsById(filmRequest.getId())) {
+            throw new NotFoundException("Film with ID " + filmRequest.getId() + " not found");
+        }
+
         Film updatedFilm = filmService.updateFilm(film);
         return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
     }
@@ -161,7 +163,7 @@ public class FilmController {
                 ));
     }
 
-    private Film convertRequestToFilm(FilmRequest filmRequest) {
+    /*private Film convertRequestToFilm(FilmRequest filmRequest) {
         Film film = new Film();
         film.setName(filmRequest.getName());
         film.setDescription(filmRequest.getDescription());
@@ -174,6 +176,27 @@ public class FilmController {
         }
 
         // Жанры
+        if (filmRequest.getGenres() != null) {
+            film.setGenreIds(filmRequest.getGenres().stream()
+                    .map(GenreDto::getId)
+                    .collect(Collectors.toSet()));
+        }
+
+        return film;
+    }*/
+
+    private Film convertRequestToFilm(FilmRequest filmRequest) {
+        Film film = new Film();
+        film.setId(filmRequest.getId()); // Установка ID из запроса
+        film.setName(filmRequest.getName());
+        film.setDescription(filmRequest.getDescription());
+        film.setReleaseDate(filmRequest.getReleaseDate());
+        film.setDuration(filmRequest.getDuration());
+
+        if (filmRequest.getMpa() != null) {
+            film.setMpaId(filmRequest.getMpa().getId());
+        }
+
         if (filmRequest.getGenres() != null) {
             film.setGenreIds(filmRequest.getGenres().stream()
                     .map(GenreDto::getId)
@@ -246,6 +269,9 @@ public class FilmController {
         private MpaDto mpa;
 
         private Set<GenreDto> genres = new HashSet<>();
+        @Getter
+        private Long id;
+
     }
 
     @Data

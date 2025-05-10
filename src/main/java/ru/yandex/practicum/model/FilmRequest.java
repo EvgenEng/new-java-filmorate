@@ -10,6 +10,8 @@ import java.util.Set;
 
 @Data
 public class FilmRequest {
+    private Long id;
+
     @NotBlank(message = "Film name cannot be blank")
     private String name;
 
