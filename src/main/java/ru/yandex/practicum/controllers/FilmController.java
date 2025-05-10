@@ -34,7 +34,7 @@ public class FilmController {
     private final GenreService genreService;
     private final UserService userService;
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         log.info("Creating new film: {}", filmRequest.getName());
         Film film = convertRequestToFilm(filmRequest);
@@ -42,6 +42,23 @@ public class FilmController {
         validateGenres(film.getGenreIds());
         Film createdFilm = filmService.addFilm(film);
         log.info("Created film with ID: {}", createdFilm.getId());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(convertToFilmResponse(createdFilm));
+    }*/
+
+    @PostMapping
+    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
+        // Явная проверка даты релиза
+        if (filmRequest.getReleaseDate().isBefore(LocalDate.of(1895, 12, 29))) {
+            throw new ValidationException(
+                    "Invalid release date",
+                    Map.of("releaseDate", "Must be after 1895-12-28")
+            );
+        }
+
+        // Остальная логика создания фильма
+        Film film = convertRequestToFilm(filmRequest);
+        Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }

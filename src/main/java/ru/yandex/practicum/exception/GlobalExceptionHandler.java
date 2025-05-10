@@ -78,4 +78,16 @@ public class GlobalExceptionHandler {
                         null
                 ));
     }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Validation error",
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                LocalDateTime.now(),
+                ex.getErrors() != null ? ex.getErrors() : new HashMap<>()
+        );
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
 }
