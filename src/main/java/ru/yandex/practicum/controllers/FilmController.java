@@ -48,15 +48,20 @@ public class FilmController {
 
     @PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        // Явная проверка даты релиза
-        if (filmRequest.getReleaseDate().isBefore(LocalDate.of(1895, 12, 29))) {
-            throw new ValidationException(
-                    "Invalid release date",
-                    Map.of("releaseDate", "Must be after 1895-12-28")
-            );
+        // Проверка существования MPA
+        if (!mpaService.existsById(filmRequest.getMpa().getId())) {
+            throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
         }
 
-        // Остальная логика создания фильма
+        // Проверка существования жанров
+        if (filmRequest.getGenres() != null) {
+            for (GenreDto genre : filmRequest.getGenres()) {
+                if (!genreService.existsById(genre.getId())) {
+                    throw new NotFoundException("Genre with id " + genre.getId() + " not found");
+                }
+            }
+        }
+
         Film film = convertRequestToFilm(filmRequest);
         Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)

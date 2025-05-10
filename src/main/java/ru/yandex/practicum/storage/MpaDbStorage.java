@@ -24,6 +24,8 @@ public class MpaDbStorage implements MpaStorage {
 
     @Override
     public boolean existsById(Integer id) {
-        return id >= 1 && id <= MpaRating.values().length;
+        String sql = "SELECT COUNT(*) FROM mpa_ratings WHERE mpa_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
     }
 }
