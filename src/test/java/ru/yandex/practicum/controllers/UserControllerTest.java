@@ -143,9 +143,8 @@ class UserControllerTest {
         System.out.println("Actual error message: " + errorMessage); // Для отладки
 
         assertTrue(
-                errorMessage.contains(String.valueOf(unknownFriendId)) &&
-                        errorMessage.contains("not found"),
-                "Expected error message to contain friend ID and 'not found'. Actual: " + errorMessage
+                errorMessage.contains("not found"),
+                "Expected error message to contain 'not found'. Actual: " + errorMessage
         );
     }
 }

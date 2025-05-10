@@ -3,7 +3,7 @@ package ru.yandex.practicum.model;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.Map;
+import java.util.Set;
 
 @Data
 public class User {
@@ -22,9 +22,13 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 
-    private Map<Long, FriendshipStatus> friends;
+    private Set<Long> friends;
 
-    public String getName() {
-        return name == null || name.isBlank() ? login : name;
+    public void setName(String name) {
+        if (name == null || name.isEmpty()) {
+            this.name = this.login;
+        } else {
+            this.name = name;
+        }
     }
 }

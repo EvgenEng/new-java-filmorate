@@ -42,9 +42,66 @@
 - Дружба между пользователями управляется через `friends` и `friendship_status`.
 
 ## Примеры SQL-запросов
-- Получение топ-5 популярных фильмов с жанрами и рейтингом MPA
-- Получение информации о пользователе с его друзьями и их статусом
-- Добавление нового фильма с жанрами
-- Обновление статуса дружбы
-- Получение общих друзей для двух пользователей
-- Получение всех фильмов определённого жанра
+
+### Работа с фильмами
+- Добавление нового фильма
+
+INSERT INTO films (name, description, release_date, duration, mpa_rating_id)
+VALUES ('Интерстеллар', 'Фантастика про космос', '2014-11-06', 169, 3);
+
+- Получение топ-10 фильмов по лайкам
+
+SELECT f.name, COUNT(l.user_id) AS likes
+FROM films f
+LEFT JOIN film_likes l ON f.film_id = l.film_id
+GROUP BY f.film_id
+ORDER BY likes DESC
+LIMIT 10;
+
+### Работа с пользователями
+- Регистрация нового пользователя
+
+INSERT INTO users (email, login, name, birthday)
+VALUES ('user@mail.ru', 'user123', 'Иван Иванов', '1990-05-15');
+
+- Поиск всех друзей пользователя
+
+SELECT u.name
+FROM friends f
+JOIN users u ON f.friend_id = u.user_id
+WHERE f.user_id = 101 AND f.status_id = 2;
+
+### Взаимодействия
+
+- Добавление лайка фильму
+
+INSERT INTO film_likes (film_id, user_id)
+VALUES (5, 101);
+
+- Добавление в друзья
+
+INSERT INTO friends (user_id, friend_id, status_id)
+VALUES (101, 102, 1); -- status_id 1 = запрос отправлен
+
+- Подтверждение дружбы
+
+UPDATE friends
+SET status_id = 2 -- status_id 2 = друзья
+WHERE user_id = 102 AND friend_id = 101;
+
+### Поисковые запросы
+
+- Фильмы определённого жанра
+
+SELECT f.name
+FROM films f
+JOIN film_genres fg ON f.film_id = fg.film_id
+WHERE fg.genre_id = 2; -- 2 = Драма
+
+- Общие друзья двух пользователей
+
+SELECT u.name
+FROM friends f1
+JOIN friends f2 ON f1.friend_id = f2.friend_id
+JOIN users u ON f1.friend_id = u.user_id
+WHERE f1.user_id = 101 AND f2.user_id = 102;
