@@ -2,7 +2,7 @@ package ru.yandex.practicum.model;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-//import ru.yandex.practicum.validators.ValidReleaseDate;
+import ru.yandex.practicum.validators.ValidReleaseDate;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -18,8 +18,8 @@ public class FilmModels {
         private String description;
 
         @NotNull
-        //@PastOrPresent(message = "Release date cannot be in the future")
-        //@ValidReleaseDate
+        @PastOrPresent(message = "Release date cannot be in the future")
+        @ValidReleaseDate
         private LocalDate releaseDate;
 
         @Positive
