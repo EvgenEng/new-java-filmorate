@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 //import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.exception.NotFoundException;
@@ -71,18 +72,6 @@ public class FilmController {
                 .body(convertToFilmResponse(createdFilm));
     }
 
-    @PutMapping("/{id}")
-    public FilmResponse update(@PathVariable Long id, @Valid @RequestBody FilmRequest filmRequest) {
-        log.info("Updating film with ID: {}", id);
-        Film film = convertRequestToFilm(filmRequest);
-        film.setId(id);
-        validateMpa(film.getMpaId());
-        validateGenres(film.getGenreIds());
-        Film updatedFilm = filmService.updateFilm(film);
-        log.info("Film with ID {} updated successfully", id);
-        return convertToFilmResponse(updatedFilm);
-    }
-
     @GetMapping
     public ResponseEntity<List<FilmResponse>> getAllFilms() {
         log.info("Getting all films");
@@ -109,11 +98,42 @@ public class FilmController {
         return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
     }*/
 
+    /*@PostMapping
+    public ResponseEntity<?> createFilm(@Valid @RequestBody FilmRequest filmRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage()));
+            throw new ValidationException("Validation failed", errors);
+        }
+
+        // Проверка существования MPA
+        if (!mpaService.existsById(filmRequest.getMpa().getId())) {
+            throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
+        }
+
+        // Проверка существования жанров
+        if (filmRequest.getGenres() != null) {
+            for (GenreDto genre : filmRequest.getGenres()) {
+                if (!genreService.existsById(genre.getId())) {
+                    throw new NotFoundException("Genre with id " + genre.getId() + " not found");
+                }
+            }
+        }
+
+        Film film = convertRequestToFilm(filmRequest);
+        Film createdFilm = filmService.addFilm(film);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(convertToFilmResponse(createdFilm));
+    }*/
+
     @PutMapping
     public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
         // Проверка на null ID
         if (filmRequest.getId() == null) {
-            throw new ValidationException("Film ID cannot be null for update");
+            Map<String, String> error = new HashMap<>();
+            error.put("id", "Film ID cannot be null for update");
+            throw new ValidationException("Film ID cannot be null for update", error);
         }
 
         log.info("Updating film with ID: {}", filmRequest.getId());
@@ -126,16 +146,6 @@ public class FilmController {
 
         Film updatedFilm = filmService.updateFilm(film);
         return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
-    }
-
-    @GetMapping("/popular")
-    public ResponseEntity<List<FilmResponse>> getPopularFilms(
-            @RequestParam(defaultValue = "10") @Min(1) int count) {
-        log.info("Getting top {} popular films", count);
-        List<FilmResponse> films = filmService.getPopularFilms(count).stream()
-                .map(this::convertToFilmResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(films);
     }
 
     @PutMapping("/{filmId}/like/{userId}")
