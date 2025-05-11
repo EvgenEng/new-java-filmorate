@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +47,7 @@ public class FilmController {
                 .body(convertToFilmResponse(createdFilm));
     }*/
 
+    /* использовался ранее (в постман теста была 1 ошибка)
     @PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         // Проверка существования MPA
@@ -66,7 +68,36 @@ public class FilmController {
         Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
+    }*/
+
+    @PostMapping
+    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) throws BadRequestException {
+        // Проверка существования MPA
+        if (!mpaService.existsById(filmRequest.getMpa().getId())) {
+            throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
+        }
+
+        // Проверка существования жанров
+        if (filmRequest.getGenres() != null) {
+            for (GenreDto genre : filmRequest.getGenres()) {
+                if (!genreService.existsById(genre.getId())) {
+                    throw new NotFoundException("Genre with id " + genre.getId() + " not found");
+                }
+            }
+        }
+
+        // Добавляем проверку даты релиза
+        LocalDate minReleaseDate = LocalDate.of(1895, 1, 1);
+        if (filmRequest.getReleaseDate().isBefore(minReleaseDate)) {
+            throw new BadRequestException("Release date must be after " + minReleaseDate);
+        }
+
+        Film film = convertRequestToFilm(filmRequest);
+        Film createdFilm = filmService.addFilm(film);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(convertToFilmResponse(createdFilm));
     }
+
 
     @PutMapping("/{id}")
     public FilmResponse update(@PathVariable Long id, @Valid @RequestBody FilmRequest filmRequest) {
