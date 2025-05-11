@@ -49,7 +49,7 @@ public class FilmController {
                 .body(convertToFilmResponse(createdFilm));
     }*/
 
-    /*@PostMapping
+    @PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         // Проверка существования MPA
         if (!mpaService.existsById(filmRequest.getMpa().getId())) {
@@ -69,38 +69,6 @@ public class FilmController {
         Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
-    }*/
-
-    @PostMapping
-    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        try {
-            // Проверка существования MPA
-            if (!mpaService.existsById(filmRequest.getMpa().getId())) {
-                throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
-            }
-
-            // Проверка существования жанров
-            if (filmRequest.getGenres() != null) {
-                for (GenreDto genre : filmRequest.getGenres()) {
-                    if (!genreService.existsById(genre.getId())) {
-                        throw new NotFoundException("Genre with id " + genre.getId() + " not found");
-                    }
-                }
-            }
-
-            Film film = convertRequestToFilm(filmRequest);
-            Film createdFilm = filmService.addFilm(film);
-            log.info("Created film with ID: {}", createdFilm.getId());
-
-            // Возвращаем статус 201 (Created)
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(convertToFilmResponse(createdFilm));
-        } catch (Exception e) {
-            // Обработка ошибок
-            log.error("Error creating film: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
-        }
     }
 
     @PutMapping("/{id}")
