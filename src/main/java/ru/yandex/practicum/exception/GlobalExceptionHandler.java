@@ -16,14 +16,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Улучшенный обработчик валидации
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         System.out.println("Validation error occurred: " + ex.getMessage()); // Логирование
         Map<String, String> errors = new HashMap<>();
 
-        // Обрабатываем все ошибки (не только FieldError)
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = error instanceof FieldError
                     ? ((FieldError) error).getField()
@@ -43,7 +41,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    // Существующие обработчики остаются без изменений
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         ErrorResponse errorResponse = new ErrorResponse(

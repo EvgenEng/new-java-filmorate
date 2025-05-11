@@ -38,7 +38,6 @@ public class ErrorResponse {
         this(message, reason, status, timestamp, null);
     }
 
-    // Добавленный конструктор
     public ErrorResponse(String message, String reason) {
         this(message, reason, HttpStatus.BAD_REQUEST, LocalDateTime.now(), null);
     }

@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class MpaDto {
-    private int id; // ID MPA
-    private String name; // Название MPA
+    private int id;
+    private String name;
 
     public String getName() {
         return this.name.replace("_", "-");

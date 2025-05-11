@@ -87,10 +87,15 @@ public class FilmServiceImpl implements FilmService {
         ORDER BY likes_count DESC
         LIMIT ?
         """;
-        return jdbcTemplate.query(sql, this::mapRowToFilm, count);
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Film film = mapRowToFilm(rs);
+            film.setLikesCount(rs.getInt("likes_count")); // Добавляем количество лайков
+            return film;
+        }, count);
     }
 
-    private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
+    private Film mapRowToFilm(ResultSet rs) throws SQLException {
         Film film = new Film();
         film.setId(rs.getLong("film_id"));
         film.setName(rs.getString("name"));

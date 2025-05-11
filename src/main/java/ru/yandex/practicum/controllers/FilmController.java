@@ -35,18 +35,6 @@ public class FilmController {
     private final GenreService genreService;
     private final UserService userService;
 
-    /*@PostMapping
-    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        log.info("Creating new film: {}", filmRequest.getName());
-        Film film = convertRequestToFilm(filmRequest);
-        validateMpa(film.getMpaId());
-        validateGenres(film.getGenreIds());
-        Film createdFilm = filmService.addFilm(film);
-        log.info("Created film with ID: {}", createdFilm.getId());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(convertToFilmResponse(createdFilm));
-    }*/
-
     @PostMapping
     public ResponseEntity<?> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         // Проверка даты релиза
@@ -103,16 +91,6 @@ public class FilmController {
         Film film = filmService.getFilmById(id);
         return ResponseEntity.ok(convertToFilmResponse(film));
     }
-
-    /*@PutMapping
-    public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        log.info("Updating film");
-        Film film = convertRequestToFilm(filmRequest);
-        validateMpa(film.getMpaId());
-        validateGenres(film.getGenreIds());
-        Film updatedFilm = filmService.updateFilm(film);
-        return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
-    }*/
 
     @PutMapping
     public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
@@ -192,28 +170,6 @@ public class FilmController {
                         errors
                 ));
     }
-
-    /*private Film convertRequestToFilm(FilmRequest filmRequest) {
-        Film film = new Film();
-        film.setName(filmRequest.getName());
-        film.setDescription(filmRequest.getDescription());
-        film.setReleaseDate(filmRequest.getReleaseDate());
-        film.setDuration(filmRequest.getDuration());
-
-        // MPA
-        if (filmRequest.getMpa() != null) {
-            film.setMpaId(filmRequest.getMpa().getId());
-        }
-
-        // Жанры
-        if (filmRequest.getGenres() != null) {
-            film.setGenreIds(filmRequest.getGenres().stream()
-                    .map(GenreDto::getId)
-                    .collect(Collectors.toSet()));
-        }
-
-        return film;
-    }*/
 
     private Film convertRequestToFilm(FilmRequest filmRequest) {
         Film film = new Film();
@@ -313,5 +269,11 @@ public class FilmController {
         private int duration;
         private MpaDto mpa;
         private Set<GenreDto> genres;
+        private int likesCount; // Добавляем поле для количества лайков
+
+
+        public int getLikesCount() {
+            return likesCount;
+        }
     }
 }

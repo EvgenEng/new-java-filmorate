@@ -47,4 +47,7 @@ public class Film {
     }
 
     private Set<Long> likes = new HashSet<>();
+
+    public void setLikesCount(int likesCount) {
+    }
 }

@@ -1,14 +1,14 @@
 package ru.yandex.practicum.controllers;
 
 import io.restassured.RestAssured;
-//import io.restassured.http.ContentType;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
-//import static io.restassured.RestAssured.given;
-//import static org.hamcrest.Matchers.*;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class FilmServiceTest {
@@ -22,11 +22,10 @@ public class FilmServiceTest {
         RestAssured.baseURI = "http://localhost";
     }
 
-    /*@Test
+    @Test
     public void testCreateFilm() {
-        // 1. Исправляем поле mpa → mpaId в JSON
         String filmJson = "{\"name\":\"Inception\",\"description\":\"A thief who steals corporate secrets\"," +
-                "\"releaseDate\":\"2010-07-16\",\"duration\":148,\"mpaId\":3,\"genres\":[1,2]}";
+                "\"releaseDate\":\"2010-07-16\",\"duration\":148,\"mpa\":{\"id\":3},\"genres\":[{\"id\":1},{\"id\":2}]}";
 
         given()
                 .contentType(ContentType.JSON)
@@ -37,12 +36,11 @@ public class FilmServiceTest {
                 .statusCode(201)
                 .body("id", notNullValue())
                 .body("name", equalTo("Inception"))
-                // 2. Проверяем структуру MPA в ответе
                 .body("mpa.id", equalTo(3))
                 .body("mpa.name", notNullValue());
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void testCreateUser() {
         String userJson = "{\"email\":\"user@example.com\",\"login\":\"user123\"," +
                 "\"name\":\"John Doe\",\"birthday\":\"1990-01-01\"}";
@@ -55,23 +53,35 @@ public class FilmServiceTest {
                 .then()
                 .statusCode(201)
                 .body("id", notNullValue());
-    }*/
+    }
 
-    /*@Test
+    @Test
     public void testGetFilmById() {
+        String filmJson = "{\"name\":\"Test Film\",\"description\":\"Test Description\"," +
+                "\"releaseDate\":\"2000-01-01\",\"duration\":120,\"mpa\":{\"id\":1}}";
+
+        Integer filmId = given()
+                .contentType(ContentType.JSON)
+                .body(filmJson)
+                .when()
+                .post("/films")
+                .then()
+                .extract()
+                .path("id");
+
         given()
                 .when()
-                .get("/films/1")
+                .get("/films/" + filmId)
                 .then()
                 .statusCode(200)
-                .body("id", equalTo(1))
+                .body("id", equalTo(filmId))
                 .body("name", notNullValue());
     }
 
     @Test
     public void testCreateFilm_ValidData() {
         String validFilmJson = "{\"name\":\"Valid Film\",\"description\":\"A valid description\"," +
-                "\"releaseDate\":\"2025-05-09\",\"duration\":90,\"mpaId\":1,\"genres\":[]}";
+                "\"releaseDate\":\"2025-05-09\",\"duration\":90,\"mpa\":{\"id\":1},\"genres\":[]}";
 
         given()
                 .contentType(ContentType.JSON)
@@ -87,7 +97,7 @@ public class FilmServiceTest {
     @Test
     public void testInvalidFilmCreation_EmptyName() {
         String invalidFilmJson = "{\"name\":\"\",\"description\":\"Valid description\"," +
-                "\"releaseDate\":\"2023-01-01\",\"duration\":90,\"mpa\":1,\"genres\":[]}";
+                "\"releaseDate\":\"2023-01-01\",\"duration\":90,\"mpa\":{\"id\":1},\"genres\":[]}";
 
         given()
                 .contentType(ContentType.JSON)
@@ -96,7 +106,7 @@ public class FilmServiceTest {
                 .post("/films")
                 .then()
                 .statusCode(400)
-                .body("message", containsString("Validation error")) // Изменено с "failed" на "error"
-                .body("errors.name", notNullValue()); // Дополнительная проверка наличия ошибки для поля name
-    }*/
+                .body("message", containsString("Validation error"))
+                .body("errors.name", notNullValue());
+    }
 }

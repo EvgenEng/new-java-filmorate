@@ -1,26 +1,26 @@
 package ru.yandex.practicum.controllers;
 
-//import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-/*import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import ru.yandex.practicum.exception.ErrorResponse;*/
+import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
-/*import java.util.Map;
+import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;*/
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserControllerTest {
@@ -34,7 +34,6 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Инициализация валидатора
         try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
@@ -46,7 +45,7 @@ class UserControllerTest {
         testUser.setBirthday(LocalDate.of(1990, 1, 1));
     }
 
-    /*@Test
+    @Test
     void shouldCreateUser() {
         ResponseEntity<User> response = restTemplate.postForEntity("/users", testUser, User.class);
 
@@ -108,7 +107,7 @@ class UserControllerTest {
 
     @Test
     void shouldReturnNotFoundForUnknownUserUpdate() {
-        testUser.setId(999L); // Устанавливаем ID несуществующего пользователя
+        testUser.setId(999L);
 
         ResponseEntity<Map> response = restTemplate.exchange("/users", HttpMethod.PUT,
                 new HttpEntity<>(testUser), Map.class);
@@ -127,7 +126,7 @@ class UserControllerTest {
         assertEquals(HttpStatus.CREATED, createdResponse.getStatusCode());
 
         Long userId = createdResponse.getBody().getId();
-        Long unknownFriendId = 999L; // Несуществующий друг
+        Long unknownFriendId = 999L;
 
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
                 "/users/" + userId + "/friends/" + unknownFriendId,
@@ -140,11 +139,6 @@ class UserControllerTest {
 
         assertNotNull(response.getBody());
         String errorMessage = response.getBody().getMessage();
-        System.out.println("Actual error message: " + errorMessage); // Для отладки
-
-        assertTrue(
-                errorMessage.contains("not found"),
-                "Expected error message to contain 'not found'. Actual: " + errorMessage
-        );
-    }*/
+        assertTrue(errorMessage.contains("not found"));
+    }
 }

@@ -8,7 +8,7 @@ public class ValidationException extends RuntimeException {
 
     public ValidationException(String message) {
         super(message);
-        this.errors = Collections.emptyMap(); // Инициализируем пустой мапой
+        this.errors = Collections.emptyMap();
     }
 
     public ValidationException(String message, Map<String, String> errors) {

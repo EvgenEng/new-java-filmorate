@@ -5,7 +5,7 @@ import java.util.Optional;
 
 public interface MpaStorage {
 
-    boolean existsById(Integer id);  // Изменено с Long на Integer
+    boolean existsById(Integer id);
 
     Optional<MpaDto> getMpaById(Integer id);
 }
