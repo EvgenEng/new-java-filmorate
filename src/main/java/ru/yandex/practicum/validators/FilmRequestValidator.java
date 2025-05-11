@@ -1,4 +1,4 @@
-package ru.yandex.practicum.validators;
+/*package ru.yandex.practicum.validators;
 
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -27,4 +27,4 @@ public class FilmRequestValidator implements Validator {
                     "Дата релиза не может быть раньше " + MIN_RELEASE_DATE);
         }
     }
-}
+}*/
