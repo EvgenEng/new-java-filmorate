@@ -1,12 +1,12 @@
 package ru.yandex.practicum.controllers;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
-import ru.yandex.practicum.exception.ErrorResponse;
+//import org.springframework.http.*;
+//import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.Film;
 //import ru.yandex.practicum.model.MpaRating;
 import ru.yandex.practicum.model.User;
