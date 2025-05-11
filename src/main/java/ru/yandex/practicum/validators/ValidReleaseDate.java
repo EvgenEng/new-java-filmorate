@@ -1,4 +1,4 @@
-/*package ru.yandex.practicum.validators;
+package ru.yandex.practicum.validators;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -12,4 +12,3 @@ public @interface ValidReleaseDate {
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }
-*/

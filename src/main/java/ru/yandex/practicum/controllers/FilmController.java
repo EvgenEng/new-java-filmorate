@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 //import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-//import org.springframework.validation.BindingResult;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.exception.NotFoundException;
@@ -125,7 +125,7 @@ public class FilmController {
         Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
-    }*/
+    }
 
     @PutMapping
     public ResponseEntity<FilmResponse> updateFilm(@Valid @RequestBody FilmRequest filmRequest) {
@@ -146,7 +146,7 @@ public class FilmController {
 
         Film updatedFilm = filmService.updateFilm(film);
         return ResponseEntity.ok(convertToFilmResponse(updatedFilm));
-    }
+    }*/
 
     @PutMapping("/{filmId}/like/{userId}")
     public ResponseEntity<Void> addLike(

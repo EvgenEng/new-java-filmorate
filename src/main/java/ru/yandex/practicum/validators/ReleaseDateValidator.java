@@ -1,4 +1,4 @@
-/*package ru.yandex.practicum.validators;
+package ru.yandex.practicum.validators;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -17,4 +17,3 @@ public class ReleaseDateValidator implements ConstraintValidator<ValidReleaseDat
         return isValid;
     }
 }
-*/
