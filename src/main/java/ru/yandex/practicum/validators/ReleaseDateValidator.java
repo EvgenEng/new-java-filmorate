@@ -12,6 +12,8 @@ public class ReleaseDateValidator implements ConstraintValidator<ValidReleaseDat
         if (value == null) {
             return true;
         }
-        return !value.isBefore(EARLIEST_DATE);
+        boolean isValid = !value.isBefore(EARLIEST_DATE);
+        System.out.println("ReleaseDateValidator: " + value + " is valid? " + isValid); // Логирование
+        return isValid;
     }
 }

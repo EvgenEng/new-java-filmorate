@@ -20,6 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        System.out.println("Validation error occurred: " + ex.getMessage()); // Логирование
         Map<String, String> errors = new HashMap<>();
 
         // Обрабатываем все ошибки (не только FieldError)
