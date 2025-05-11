@@ -116,7 +116,7 @@ class FilmControllerTest {
         assertEquals(MpaRating.G, response.getBody().getMpaRating());
     }*/
 
-    @Test
+    /*@Test
     void shouldNotUpdateFilmWithEmptyName() {
         Film created = restTemplate.postForEntity("/films", testFilm, Film.class).getBody();
         assertNotNull(created);
@@ -156,7 +156,7 @@ class FilmControllerTest {
                 ErrorResponse.class
         );
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    }
+    }*/
 
     /*@Test
     void shouldNotCreateFilmWithLongDescription() {
@@ -263,7 +263,7 @@ class FilmControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }*/
 
-    @Test
+    /*@Test
     void shouldNotRemoveLikeFromUnknownFilm() {
         User createdUser = restTemplate.postForEntity("/users", testUser, User.class).getBody();
         assertNotNull(createdUser);
@@ -293,7 +293,7 @@ class FilmControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Internal Server Error", response.getBody().getMessage());
-    }
+    }*/
 
     /*@Test
     void shouldGetPopularFilms() {

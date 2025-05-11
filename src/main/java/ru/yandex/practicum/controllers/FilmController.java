@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
+//import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +19,7 @@ import ru.yandex.practicum.service.MpaService;
 import ru.yandex.practicum.service.GenreService;
 import jakarta.validation.Valid;
 import ru.yandex.practicum.service.UserService;
+import ru.yandex.practicum.validators.FilmRequestValidator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +35,7 @@ public class FilmController {
     private final MpaService mpaService;
     private final GenreService genreService;
     private final UserService userService;
+    private final FilmRequestValidator validator;  // Внедряем валидатор
 
     /*@PostMapping
     public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
@@ -71,7 +73,10 @@ public class FilmController {
     }*/
 
     @PostMapping
-    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) throws BadRequestException {
+    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
+        // Логирование входных данных
+        log.debug("Creating film with request: {}", filmRequest);
+
         // Проверка существования MPA
         if (!mpaService.existsById(filmRequest.getMpa().getId())) {
             throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
@@ -86,18 +91,11 @@ public class FilmController {
             }
         }
 
-        // Добавляем проверку даты релиза
-        LocalDate minReleaseDate = LocalDate.of(1895, 1, 1);
-        if (filmRequest.getReleaseDate().isBefore(minReleaseDate)) {
-            throw new BadRequestException("Release date must be after " + minReleaseDate);
-        }
-
         Film film = convertRequestToFilm(filmRequest);
         Film createdFilm = filmService.addFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }
-
 
     @PutMapping("/{id}")
     public FilmResponse update(@PathVariable Long id, @Valid @RequestBody FilmRequest filmRequest) {

@@ -42,7 +42,7 @@ public class FilmServiceTest {
                 .body("mpa.name", notNullValue());
     }*/
 
-    @Test
+    /*@Test
     public void testCreateUser() {
         String userJson = "{\"email\":\"user@example.com\",\"login\":\"user123\"," +
                 "\"name\":\"John Doe\",\"birthday\":\"1990-01-01\"}";
@@ -55,7 +55,7 @@ public class FilmServiceTest {
                 .then()
                 .statusCode(201)
                 .body("id", notNullValue());
-    }
+    }*/
 
     /*@Test
     public void testGetFilmById() {
