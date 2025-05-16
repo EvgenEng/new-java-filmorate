@@ -8,7 +8,6 @@ import ru.yandex.practicum.validators.ValidReleaseDate;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Data
 public class Film {
@@ -30,21 +29,10 @@ public class Film {
     private Integer mpaId;
 
     @JsonIgnore
-    public MpaRating getMpaRating() {
-        return mpaId != null ? MpaRating.fromId(mpaId) : null;
-    }
+    private Mpa mpa;
 
     @JsonProperty("genres")
     private Set<Integer> genreIds = new HashSet<>();
-
-    @JsonIgnore
-    public Set<FilmGenre> getGenres() {
-        if (genreIds == null) return Set.of();
-        return genreIds.stream()
-                .filter(id -> id > 0 && id <= FilmGenre.values().length)
-                .map(id -> FilmGenre.values()[id - 1])
-                .collect(Collectors.toSet());
-    }
 
     private Set<Long> likes = new HashSet<>();
 

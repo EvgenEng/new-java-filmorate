@@ -1,6 +1,6 @@
 package ru.yandex.practicum.service;
 
-import ru.yandex.practicum.model.MpaDto;
+import ru.yandex.practicum.dto.MpaDto;
 import java.util.List;
 
 public interface MpaService {

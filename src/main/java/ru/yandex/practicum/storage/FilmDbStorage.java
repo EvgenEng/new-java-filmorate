@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final UserStorage userStorage;
 
     @Override
     public Film create(Film film) {
@@ -99,6 +100,46 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT COUNT(*) FROM films WHERE film_id = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, filmId);
         return count != null && count > 0;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+        if (!existsById(filmId)) {
+            throw new NotFoundException("Film not found");
+        }
+        if (!userStorage.existsById(userId)) {
+            throw new NotFoundException("User not found");
+        }
+
+        String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
+        jdbcTemplate.update(sql, filmId, userId);
+    }
+
+    @Override
+    public void removeLike(Long filmId, Long userId) {
+        String sql = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
+        int deleted = jdbcTemplate.update(sql, filmId, userId);
+        if (deleted == 0) {
+            throw new NotFoundException("Like not found");
+        }
+    }
+
+    @Override
+    public List<Film> getPopularFilms(int count) {
+        String sql = """
+            SELECT f.*, COUNT(fl.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN film_likes fl ON f.film_id = fl.film_id
+            GROUP BY f.film_id
+            ORDER BY likes_count DESC
+            LIMIT ?
+            """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Film film = mapRowToFilm(rs, rowNum);
+            film.setLikesCount(rs.getInt("likes_count"));
+            return film;
+        }, count);
     }
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {

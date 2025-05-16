@@ -11,15 +11,18 @@ DROP TABLE IF EXISTS friendship_statuses;
 -- Создание таблицы mpa_ratings
 CREATE TABLE IF NOT EXISTS mpa_ratings (
     mpa_id INTEGER PRIMARY KEY,
-    name VARCHAR(10) NOT NULL,
-    description VARCHAR(255)
+    name VARCHAR(50) NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    description VARCHAR(255) NOT NULL
 );
 
 -- Создание таблицы genres
 CREATE TABLE IF NOT EXISTS genres (
     genre_id INTEGER PRIMARY KEY,
-    name VARCHAR(50) NOT NULL
+    name VARCHAR(50) NOT NULL,
+    russian_name VARCHAR(50) NOT NULL
 );
+
 
 -- Создание таблицы films
 CREATE TABLE IF NOT EXISTS films (

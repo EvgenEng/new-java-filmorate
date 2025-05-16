@@ -2,6 +2,8 @@ package ru.yandex.practicum.model;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import ru.yandex.practicum.dto.GenreDto;
+import ru.yandex.practicum.dto.MpaDto;
 
 import java.time.LocalDate;
 import java.util.HashSet;

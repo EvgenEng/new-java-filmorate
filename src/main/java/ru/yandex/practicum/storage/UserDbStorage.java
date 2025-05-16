@@ -82,6 +82,42 @@ public class UserDbStorage implements UserStorage {
         return count != null && count > 0;
     }
 
+    @Override
+    public List<User> getFriends(Long userId) {
+        String sql = "SELECT u.* FROM users u JOIN friends f ON u.user_id = f.friend_id WHERE f.user_id = ?";
+        return jdbcTemplate.query(sql, this::mapRowToUser, userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        String sql = """
+            SELECT u.* FROM friends f1
+            JOIN friends f2 ON f1.friend_id = f2.friend_id
+            JOIN users u ON f1.friend_id = u.user_id
+            WHERE f1.user_id = ? AND f2.user_id = ?
+            """;
+        return jdbcTemplate.query(sql, this::mapRowToUser, userId, otherId);
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        String sql = "INSERT INTO friends (user_id, friend_id, status_id) VALUES (?, ?, 1)";
+        jdbcTemplate.update(sql, userId, friendId);
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        String sql = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
+        jdbcTemplate.update(sql, userId, friendId);
+    }
+
+    @Override
+    public boolean friendshipExists(Long userId, Long friendId) {
+        String sql = "SELECT COUNT(*) FROM friends WHERE user_id = ? AND friend_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId, friendId);
+        return count != null && count > 0;
+    }
+
     private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
         User user = new User();
         user.setId(rs.getLong("user_id"));

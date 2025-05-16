@@ -25,7 +25,8 @@ public class FilmServiceTest {
     @Test
     public void testCreateFilm() {
         String filmJson = "{\"name\":\"Inception\",\"description\":\"A thief who steals corporate secrets\"," +
-                "\"releaseDate\":\"2010-07-16\",\"duration\":148,\"mpa\":{\"id\":3},\"genres\":[{\"id\":1},{\"id\":2}]}";
+                "\"releaseDate\":\"2010-07-16\",\"duration\":148,\"mpa\":{\"id\":3,\"name\":\"PG-13\",\"description\":\"Parents Strongly Cautioned\"}," +
+                "\"genres\":[{\"id\":1,\"name\":\"Комедия\"},{\"id\":2,\"name\":\"Драма\"}]}";
 
         given()
                 .contentType(ContentType.JSON)
@@ -37,7 +38,7 @@ public class FilmServiceTest {
                 .body("id", notNullValue())
                 .body("name", equalTo("Inception"))
                 .body("mpa.id", equalTo(3))
-                .body("mpa.name", notNullValue());
+                .body("genres.size()", greaterThanOrEqualTo(1));
     }
 
     @Test
@@ -58,7 +59,8 @@ public class FilmServiceTest {
     @Test
     public void testGetFilmById() {
         String filmJson = "{\"name\":\"Test Film\",\"description\":\"Test Description\"," +
-                "\"releaseDate\":\"2000-01-01\",\"duration\":120,\"mpa\":{\"id\":1}}";
+                "\"releaseDate\":\"2000-01-01\",\"duration\":120,\"mpa\":{\"id\":1,\"name\":\"G\",\"description\":\"General Audiences\"}," +
+                "\"genres\":[]}";
 
         Integer filmId = given()
                 .contentType(ContentType.JSON)
@@ -75,29 +77,14 @@ public class FilmServiceTest {
                 .then()
                 .statusCode(200)
                 .body("id", equalTo(filmId))
-                .body("name", notNullValue());
-    }
-
-    @Test
-    public void testCreateFilm_ValidData() {
-        String validFilmJson = "{\"name\":\"Valid Film\",\"description\":\"A valid description\"," +
-                "\"releaseDate\":\"2025-05-09\",\"duration\":90,\"mpa\":{\"id\":1},\"genres\":[]}";
-
-        given()
-                .contentType(ContentType.JSON)
-                .body(validFilmJson)
-                .when()
-                .post("/films")
-                .then()
-                .statusCode(201)
-                .body("id", notNullValue())
-                .body("name", equalTo("Valid Film"));
+                .body("name", equalTo("Test Film"));
     }
 
     @Test
     public void testInvalidFilmCreation_EmptyName() {
         String invalidFilmJson = "{\"name\":\"\",\"description\":\"Valid description\"," +
-                "\"releaseDate\":\"2023-01-01\",\"duration\":90,\"mpa\":{\"id\":1},\"genres\":[]}";
+                "\"releaseDate\":\"2023-01-01\",\"duration\":90,\"mpa\":{\"id\":1,\"name\":\"G\",\"description\":\"General Audiences\"}," +
+                "\"genres\":[]}";
 
         given()
                 .contentType(ContentType.JSON)

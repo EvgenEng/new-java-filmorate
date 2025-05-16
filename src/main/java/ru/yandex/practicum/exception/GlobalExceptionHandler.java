@@ -88,4 +88,16 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.badRequest().body(errorResponse);
     }
+
+    @ExceptionHandler(Throwable.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Throwable ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Internal Server Error",
+                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
 }

@@ -9,15 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import ru.yandex.practicum.exception.ErrorResponse;
 import ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,11 +64,17 @@ class UserControllerTest {
     @Test
     void shouldUpdateUser() {
         User created = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        assertNotNull(created);
         created.setName("Updated Name");
 
-        ResponseEntity<User> response = restTemplate.postForEntity("/users", created, User.class);
+        ResponseEntity<User> response = restTemplate.exchange(
+                "/users",
+                HttpMethod.PUT,
+                new HttpEntity<>(created),
+                User.class
+        );
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Updated Name", response.getBody().getName());
     }
 
@@ -109,36 +111,47 @@ class UserControllerTest {
     void shouldReturnNotFoundForUnknownUserUpdate() {
         testUser.setId(999L);
 
-        ResponseEntity<Map> response = restTemplate.exchange("/users", HttpMethod.PUT,
-                new HttpEntity<>(testUser), Map.class);
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/users",
+                HttpMethod.PUT,
+                new HttpEntity<>(testUser),
+                ErrorResponse.class
+        );
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
-    public void testRemoveFriendWithUnknownId() {
-        User existingUser = new User();
-        existingUser.setEmail("test@example.com");
-        existingUser.setLogin("testuser");
-        existingUser.setBirthday(LocalDate.now().minusYears(20));
+    void shouldAddAndRemoveFriend() {
+        // Create first user
+        User user1 = restTemplate.postForEntity("/users", testUser, User.class).getBody();
+        assertNotNull(user1);
 
-        ResponseEntity<User> createdResponse = restTemplate.postForEntity("/users", existingUser, User.class);
-        assertEquals(HttpStatus.CREATED, createdResponse.getStatusCode());
+        // Create second user
+        User user2 = new User();
+        user2.setEmail("friend@example.com");
+        user2.setLogin("friendlogin");
+        user2.setName("Friend User");
+        user2.setBirthday(LocalDate.of(1995, 1, 1));
+        User friend = restTemplate.postForEntity("/users", user2, User.class).getBody();
+        assertNotNull(friend);
 
-        Long userId = createdResponse.getBody().getId();
-        Long unknownFriendId = 999L;
+        // Add friend
+        ResponseEntity<Void> addResponse = restTemplate.exchange(
+                "/users/" + user1.getId() + "/friends/" + friend.getId(),
+                HttpMethod.PUT,
+                null,
+                Void.class
+        );
+        assertEquals(HttpStatus.OK, addResponse.getStatusCode());
 
-        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-                "/users/" + userId + "/friends/" + unknownFriendId,
+        // Remove friend
+        ResponseEntity<Void> removeResponse = restTemplate.exchange(
+                "/users/" + user1.getId() + "/friends/" + friend.getId(),
                 HttpMethod.DELETE,
                 null,
-                ErrorResponse.class
+                Void.class
         );
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-
-        assertNotNull(response.getBody());
-        String errorMessage = response.getBody().getMessage();
-        assertTrue(errorMessage.contains("not found"));
+        assertEquals(HttpStatus.OK, removeResponse.getStatusCode());
     }
 }

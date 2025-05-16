@@ -6,10 +6,11 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import ru.yandex.practicum.dto.GenreDto;
+import ru.yandex.practicum.dto.MpaDto;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.exception.ValidationException;
 import ru.yandex.practicum.model.*;
@@ -18,7 +19,6 @@ import ru.yandex.practicum.service.FilmService;
 import ru.yandex.practicum.service.MpaService;
 import ru.yandex.practicum.service.GenreService;
 import jakarta.validation.Valid;
-import ru.yandex.practicum.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,33 +33,11 @@ public class FilmController {
     private final FilmService filmService;
     private final MpaService mpaService;
     private final GenreService genreService;
-    private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<?> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
-        // Проверка даты релиза
-        if (filmRequest.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("message", "Дата релиза не может быть раньше 28 декабря 1895 года");
-            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(errorResponse);
-        }
-
-        // Проверка существования MPA
-        if (!mpaService.existsById(filmRequest.getMpa().getId())) {
-            throw new NotFoundException("MPA rating with id " + filmRequest.getMpa().getId() + " not found");
-        }
-
-        // Проверка существования жанров
-        if (filmRequest.getGenres() != null) {
-            for (GenreDto genre : filmRequest.getGenres()) {
-                if (!genreService.existsById(genre.getId())) {
-                    throw new NotFoundException("Genre with id " + genre.getId() + " not found");
-                }
-            }
-        }
-
+    public ResponseEntity<FilmResponse> createFilm(@Valid @RequestBody FilmRequest filmRequest) {
         Film film = convertRequestToFilm(filmRequest);
-        Film createdFilm = filmService.addFilm(film);
+        Film createdFilm = filmService.validateAndCreateFilm(film);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(convertToFilmResponse(createdFilm));
     }
@@ -69,9 +47,7 @@ public class FilmController {
         log.info("Updating film with ID: {}", id);
         Film film = convertRequestToFilm(filmRequest);
         film.setId(id);
-        validateMpa(film.getMpaId());
-        validateGenres(film.getGenreIds());
-        Film updatedFilm = filmService.updateFilm(film);
+        Film updatedFilm = filmService.validateAndUpdateFilm(film);
         log.info("Film with ID {} updated successfully", id);
         return convertToFilmResponse(updatedFilm);
     }
@@ -173,7 +149,7 @@ public class FilmController {
 
     private Film convertRequestToFilm(FilmRequest filmRequest) {
         Film film = new Film();
-        film.setId(filmRequest.getId()); // Установка ID из запроса
+        film.setId(filmRequest.getId());
         film.setName(filmRequest.getName());
         film.setDescription(filmRequest.getDescription());
         film.setReleaseDate(filmRequest.getReleaseDate());

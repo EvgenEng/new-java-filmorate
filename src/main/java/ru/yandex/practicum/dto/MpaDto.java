@@ -1,4 +1,4 @@
-package ru.yandex.practicum.model;
+package ru.yandex.practicum.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,8 +8,5 @@ import lombok.Data;
 public class MpaDto {
     private int id;
     private String name;
-
-    public String getName() {
-        return this.name.replace("_", "-");
-    }
+    private String description;
 }

@@ -3,7 +3,7 @@ package ru.yandex.practicum.controllers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.model.MpaDto;
+import ru.yandex.practicum.dto.MpaDto;
 import ru.yandex.practicum.service.MpaService;
 import java.util.List;
 

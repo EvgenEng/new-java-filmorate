@@ -21,4 +21,10 @@ public interface FilmService {
     List<Film> getPopularFilms(int count);
 
     boolean existsById(Long id);
+
+    Film validateAndCreateFilm(Film film);
+
+    Film validateAndUpdateFilm(Film film);
+
+    void validateFilmData(Film film);
 }
