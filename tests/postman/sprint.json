@@ -1,0 +1,47 @@
+{
+  "info": {
+    "name": "Filmorate API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Film",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Film\",\n  \"description\": \"Test Description\",\n  \"releaseDate\": \"2000-01-01\",\n  \"duration\": 120,\n  \"mpa\": 1,\n  \"genres\": [1, 2]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/films",
+          "host": ["{{base_url}}"],
+          "path": ["films"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function() {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response has film ID\", function() {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.id).to.be.a('number');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

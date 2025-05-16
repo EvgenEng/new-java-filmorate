@@ -1,11 +1,13 @@
 package ru.yandex.practicum.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import jakarta.validation.constraints.*;
-import java.time.LocalDate;
-import java.util.Set;
-
 import ru.yandex.practicum.validators.ValidReleaseDate;
+
+import java.time.LocalDate;
+import java.util.*;
 
 @Data
 public class Film {
@@ -23,6 +25,17 @@ public class Film {
     @Positive(message = "Продолжительность должна быть положительной")
     private int duration;
 
-    private MpaRating mpa;
-    private Set<FilmGenre> genres;
+    @JsonProperty("mpa")
+    private Integer mpaId;
+
+    @JsonIgnore
+    private Mpa mpa;
+
+    @JsonProperty("genres")
+    private Set<Integer> genreIds = new HashSet<>();
+
+    private Set<Long> likes = new HashSet<>();
+
+    public void setLikesCount(int likesCount) {
+    }
 }
